@@ -131,12 +131,12 @@ local themeStyles = {
         TextColor = Color3.fromRGB(152, 99, 53),
         ElementColor = Color3.fromRGB(24, 24, 24)
     },
-    Sea = {
-        SchemeColor = Color3.fromRGB(98, 150, 191),
-        Background = Color3.fromRGB(45, 113, 166),
-        Header = Color3.fromRGB(36, 38, 35),
-        TextColor = Color3.fromRGB(152, 99, 53),
-        ElementColor = Color3.fromRGB(24, 24, 24)
+    SeaTheme = {
+        SchemeColor = Color3.fromRGB(96, 120, 179),
+        Background = Color3.fromRGB(32, 48, 87),
+        Header = Color3.fromRGB(1, 24, 84),
+        TextColor = Color3.fromRGB(207, 220, 255),
+        ElementColor = Color3.fromRGB(86, 126, 227)
     },
     Serpent = {
         SchemeColor = Color3.fromRGB(0, 166, 58),
@@ -185,8 +185,8 @@ function Kavo.CreateLib(kavName, themeList)
         themeList = themeStyles.BloodTheme
     elseif themeList == "GrapeTheme" then
         themeList = themeStyles.GrapeTheme
-    elseif themeList == "Sea" then
-        themeList = themeStyles.Sea
+    elseif themeList == "SeaTheme" then
+        themeList = themeStyles.SeaTheme
     elseif themeList == "Ocean" then
         themeList = themeStyles.Ocean
     elseif themeList == "Midnight" then
