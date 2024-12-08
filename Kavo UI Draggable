@@ -133,10 +133,10 @@ local themeStyles = {
     },
     SeaTheme = {
         SchemeColor = Color3.fromRGB(96, 120, 179),
-        Background = Color3.fromRGB(32, 48, 87),
-        Header = Color3.fromRGB(1, 24, 84),
+        Background = Color3.fromRGB(80, 104, 163),
+        Header = Color3.fromRGB(31, 60, 135),
         TextColor = Color3.fromRGB(207, 220, 255),
-        ElementColor = Color3.fromRGB(86, 126, 227)
+        ElementColor = Color3.fromRGB(95, 118, 176)
     },
     Serpent = {
         SchemeColor = Color3.fromRGB(0, 166, 58),
