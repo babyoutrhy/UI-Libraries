@@ -194,7 +194,6 @@ function Library:CreateWindow(name)
 
         local Tab = {}
         
-        -- Toggle Element
         function Tab:AddToggle(config)
             local ToggleElement = CreateElement("Toggle", 30)
             ToggleElement.LayoutOrder = #TabContent:GetChildren()
@@ -254,7 +253,6 @@ function Library:CreateWindow(name)
             end)
         end
 
-        -- Button Element
         function Tab:AddButton(config)
             local ButtonElement = CreateElement("Button", 30)
             ButtonElement.LayoutOrder = #TabContent:GetChildren()
@@ -277,7 +275,6 @@ function Library:CreateWindow(name)
             end)
         end
 
-        -- Label Element
         function Tab:AddLabel(config)
             local LabelElement = CreateElement("Label", 20)
             LabelElement.LayoutOrder = #TabContent:GetChildren()
@@ -295,7 +292,6 @@ function Library:CreateWindow(name)
             Label.Parent = LabelElement
         end
 
-        -- Slider Element
         function Tab:AddSlider(config)
             local SliderElement = CreateElement("Slider", 40)
             SliderElement.LayoutOrder = #TabContent:GetChildren()
@@ -404,3 +400,8 @@ function Library:CreateWindow(name)
 
         return Tab
     end
+
+    return Window
+end
+
+return Library
