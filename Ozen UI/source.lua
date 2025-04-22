@@ -4,6 +4,7 @@ function Library:CreateWindow(name)
     local UserInputService = game:GetService("UserInputService")
     local TweenService = game:GetService("TweenService")
     local textService = game:GetService("TextService")
+    local RunService = game:GetService("RunService")
     
     -- Main GUI
     local ScreenGui = Instance.new("ScreenGui")
@@ -51,6 +52,48 @@ function Library:CreateWindow(name)
     CloseButton.TextSize = 14
     CloseButton.Parent = TitleBar
 
+    -- Mobile compatible drag functionality
+    local dragStartPos
+    local startPos
+    local isDragging = false
+
+    local function updateInput(input)
+        local delta = input.Position - dragStartPos
+        MainFrame.Position = UDim2.new(
+            startPos.X.Scale, 
+            startPos.X.Offset + delta.X,
+            startPos.Y.Scale, 
+            startPos.Y.Offset + delta.Y
+        )
+    end
+
+    local function onInputBegan(input, processed)
+        if not processed and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
+            isDragging = true
+            dragStartPos = input.Position
+            startPos = MainFrame.Position
+            
+            local conn
+            conn = input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    isDragging = false
+                    conn:Disconnect()
+                end
+            end)
+        end
+    end
+
+    UserInputService.InputChanged:Connect(function(input, processed)
+        if isDragging and not processed then
+            if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+                updateInput(input)
+            end
+        end
+    end)
+
+    MainFrame.InputBegan:Connect(onInputBegan)
+    TitleBar.InputBegan:Connect(onInputBegan)
+
     -- Tab System with Scrolling
     local TabBar = Instance.new("ScrollingFrame")
     TabBar.Name = "TabBar"
@@ -95,40 +138,6 @@ function Library:CreateWindow(name)
             )
         end
     end
-
-    -- Drag functionality
-    local dragging, dragInput, dragStart, startPos
-
-    local function update(input)
-        local delta = input.Position - dragStart
-        MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-    end
-
-    TitleBar.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = true
-            dragStart = input.Position
-            startPos = MainFrame.Position
-            
-            input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    dragging = false
-                end
-            end)
-        end
-    end)
-
-    TitleBar.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement then
-            dragInput = input
-        end
-    end)
-
-    UserInputService.InputChanged:Connect(function(input)
-        if input == dragInput and dragging then
-            update(input)
-        end
-    end)
 
     CloseButton.MouseButton1Click:Connect(function()
         ScreenGui:Destroy()
@@ -254,8 +263,8 @@ function Library:CreateWindow(name)
                 end
             end
 
-            ToggleContainer.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            ToggleContainer.InputBegan:Connect(function(input, processed)
+                if not processed and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
                     ToggleState = not ToggleState
                     updateToggle()
                     if config.Callback then
