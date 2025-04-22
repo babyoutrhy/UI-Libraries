@@ -119,26 +119,6 @@ function Library:CreateWindow(name)
     ContentArea.Size = UDim2.new(1, -20, 1, -80)
     ContentArea.Parent = MainFrame
 
-    -- Auto-scroll to keep active tab visible
-    local function ensureTabVisible(tabButton)
-        local tabPosition = tabButton.AbsolutePosition.X
-        local tabSize = tabButton.AbsoluteSize.X
-        local viewportStart = TabBar.AbsolutePosition.X
-        local viewportEnd = viewportStart + TabBar.AbsoluteSize.X
-        
-        if tabPosition < viewportStart then
-            TabBar.CanvasPosition = Vector2.new(
-                TabBar.CanvasPosition.X - (viewportStart - tabPosition) - 5,
-                0
-            )
-        elseif tabPosition + tabSize > viewportEnd then
-            TabBar.CanvasPosition = Vector2.new(
-                TabBar.CanvasPosition.X + (tabPosition + tabSize - viewportEnd) + 5,
-                0
-            )
-        end
-    end
-
     CloseButton.MouseButton1Click:Connect(function()
         ScreenGui:Destroy()
     end)
@@ -210,7 +190,6 @@ function Library:CreateWindow(name)
             TabContent.Visible = true
             currentTab = TabContent
             TabButton.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
-            ensureTabVisible(TabButton)
         end)
 
         local Tab = {}
@@ -314,88 +293,6 @@ function Library:CreateWindow(name)
             Label.TextSize = 12
             Label.TextXAlignment = Enum.TextXAlignment.Left
             Label.Parent = LabelElement
-        end
-
-        -- Dropdown Element
-        function Tab:AddDropdown(config)
-            local DropdownElement = CreateElement("Dropdown", 30)
-            DropdownElement.LayoutOrder = #TabContent:GetChildren()
-            DropdownElement.Parent = TabContent
-            DropdownElement.ClipsDescendants = true
-
-            local DropdownButton = Instance.new("TextButton")
-            DropdownButton.Name = "Button"
-            DropdownButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-            DropdownButton.Size = UDim2.new(1, 0, 1, 0)
-            DropdownButton.Font = Enum.Font.Gotham
-            DropdownButton.Text = config.Text .. ": " .. (config.Default or "")
-            DropdownButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-            DropdownButton.TextSize = 12
-            DropdownButton.Parent = DropdownElement
-
-            local DropdownList = Instance.new("ScrollingFrame")
-            DropdownList.Name = "List"
-            DropdownList.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-            DropdownList.Position = UDim2.new(0, 0, 1, 5)
-            DropdownList.Size = UDim2.new(1, 0, 0, 0)
-            DropdownList.ScrollBarThickness = 3
-            DropdownList.AutomaticCanvasSize = Enum.AutomaticSize.Y
-            DropdownList.Visible = false
-            DropdownList.Parent = DropdownElement
-
-            local ListLayout = Instance.new("UIListLayout")
-            ListLayout.Parent = DropdownList
-            ListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-
-            local isOpen = false
-            local selected = config.Default
-
-            local function toggleDropdown()
-                isOpen = not isOpen
-                DropdownList.Visible = isOpen
-                TweenService:Create(DropdownList, TweenInfo.new(0.2), {
-                    Size = isOpen and UDim2.new(1, 0, 0, math.min(#config.Options * 25, 150)) or UDim2.new(1, 0, 0, 0)
-                }):Play()
-            end
-
-            -- Create options
-            for _, option in ipairs(config.Options) do
-                local OptionButton = Instance.new("TextButton")
-                OptionButton.Name = option
-                OptionButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-                OptionButton.Size = UDim2.new(1, -10, 0, 25)
-                OptionButton.Position = UDim2.new(0, 5, 0, 0)
-                OptionButton.Font = Enum.Font.Gotham
-                OptionButton.Text = option
-                OptionButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-                OptionButton.TextSize = 12
-                OptionButton.Parent = DropdownList
-
-                OptionButton.MouseButton1Click:Connect(function()
-                    selected = option
-                    DropdownButton.Text = config.Text .. ": " .. option
-                    toggleDropdown()
-                    if config.Callback then
-                        config.Callback(option)
-                    end
-                end)
-            end
-
-            DropdownButton.MouseButton1Click:Connect(toggleDropdown)
-            
-            -- Close dropdown when clicking outside
-            local dropdownConnection
-            dropdownConnection = UserInputService.InputBegan:Connect(function(input, processed)
-                if isOpen and input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    if not DropdownElement:IsAncestorOf(input.Parent) then
-                        toggleDropdown()
-                    end
-                end
-            end)
-
-            DropdownElement.Destroying:Connect(function()
-                dropdownConnection:Disconnect()
-            end)
         end
 
         -- Slider Element
@@ -507,8 +404,3 @@ function Library:CreateWindow(name)
 
         return Tab
     end
-
-    return Window
-end
-
-return Library
