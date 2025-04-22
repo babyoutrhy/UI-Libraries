@@ -2,27 +2,23 @@ local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/rhywm
 local Window = Library:CreateWindow("Ozen UI")
 
 -- Add multiple tabs
-local MainTab = Window:AddTab("Main")
-local CombatTab = Window:AddTab("Combat")
-local PlayerTab = Window:AddTab("Player Settings")
-local WorldTab = Window:AddTab("World Mods")
-local MiscTab = Window:AddTab("Miscellaneous")
+local Tab1 = Window:AddTab("Main")
+local Tab2 = Window:AddTab("Combat")
+local Tab3 = Window:AddTab("Player Settings")
+local Tab4 = Window:AddTab("World Mods")
+local Tab5 = Window:AddTab("Miscellaneous")
 
 -- Add elements to tabs
-MainTab:AddToggle({
-    Text = "Auto-Farm",
-    Callback = function(state) 
-      print("Auto-Farm:", state) 
-    end
+Tab1:AddToggle({
+    Text = "Toggle",
+    Callback = function(state) print("Toggle:", state) end
 })
 
-CombatTab:AddButton({
-    Text = "Kill All",
-    Callback = function() 
-      print("Executing all enemies") 
-    end
+Tab2:AddButton({
+    Text = "Button",
+    Callback = function() print("Button clicked!") end
 })
 
-PlayerTab:AddLabel({
-    Text = "Speed: Normal"
+Tab3:AddLabel({
+    Text = "This is an example of label."
 })
