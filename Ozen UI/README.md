@@ -2,7 +2,7 @@
 
  - It is opened source! Feel free to make your own changes.
  - Ozen UI represents such as button, toggle and multiple tabs!
- - Coming soon: slider, dropdown.
+ - Changes: added UICorner for the toggle, added slider.
 
 🖤 Thank you for using Ozen UI, much love from rhy 🖤
 
