@@ -194,64 +194,71 @@ function Library:CreateWindow(name)
 
         local Tab = {}
         
-        function Tab:AddToggle(config)
-            local ToggleElement = CreateElement("Toggle", 30)
-            ToggleElement.LayoutOrder = #TabContent:GetChildren()
-            ToggleElement.Parent = TabContent
+function Tab:AddToggle(config)
+    local ToggleElement = CreateElement("Toggle", 30)
+    ToggleElement.LayoutOrder = #TabContent:GetChildren()
+    ToggleElement.Parent = TabContent
 
-            local ToggleTitle = Instance.new("TextLabel")
-            ToggleTitle.Name = "Title"
-            ToggleTitle.BackgroundTransparency = 1
-            ToggleTitle.Position = UDim2.new(0, 10, 0, 0)
-            ToggleTitle.Size = UDim2.new(0, 200, 1, 0)
-            ToggleTitle.Font = Enum.Font.Gotham
-            ToggleTitle.Text = config.Text
-            ToggleTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-            ToggleTitle.TextSize = 12
-            ToggleTitle.TextXAlignment = Enum.TextXAlignment.Left
-            ToggleTitle.Parent = ToggleElement
+    local ToggleTitle = Instance.new("TextLabel")
+    ToggleTitle.Name = "Title"
+    ToggleTitle.BackgroundTransparency = 1
+    ToggleTitle.Position = UDim2.new(0, 10, 0, 0)
+    ToggleTitle.Size = UDim2.new(0, 200, 1, 0)
+    ToggleTitle.Font = Enum.Font.Gotham
+    ToggleTitle.Text = config.Text
+    ToggleTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+    ToggleTitle.TextSize = 12
+    ToggleTitle.TextXAlignment = Enum.TextXAlignment.Left
+    ToggleTitle.Parent = ToggleElement
 
-            local ToggleContainer = Instance.new("Frame")
-            ToggleContainer.Name = "Container"
-            ToggleContainer.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-            ToggleContainer.Position = UDim2.new(1, -50, 0.5, -10)
-            ToggleContainer.Size = UDim2.new(0, 40, 0, 20)
-            ToggleContainer.Parent = ToggleElement
+    local ToggleContainer = Instance.new("Frame")
+    ToggleContainer.Name = "Container"
+    ToggleContainer.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    ToggleContainer.Position = UDim2.new(1, -50, 0.5, -10)
+    ToggleContainer.Size = UDim2.new(0, 40, 0, 20)
+    ToggleContainer.Parent = ToggleElement
 
-            local ToggleIndicator = Instance.new("Frame")
-            ToggleIndicator.Name = "Indicator"
-            ToggleIndicator.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-            ToggleIndicator.BorderSizePixel = 0
-            ToggleIndicator.Position = UDim2.new(0, 2, 0, 2)
-            ToggleIndicator.Size = UDim2.new(0, 16, 0, 16)
-            ToggleIndicator.Parent = ToggleContainer
+    -- Add UICorner to the toggle container (pill shape)
+    local ContainerCorner = Instance.new("UICorner")
+    ContainerCorner.CornerRadius = UDim.new(1, 0) -- Fully rounded ends
+    ContainerCorner.Parent = ToggleContainer
 
-            local Corner = Instance.new("UICorner")
-            Corner.CornerRadius = UDim.new(1, 0)
-            Corner.Parent = ToggleIndicator
+    local ToggleIndicator = Instance.new("Frame")
+    ToggleIndicator.Name = "Indicator"
+    ToggleIndicator.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    ToggleIndicator.BorderSizePixel = 0
+    ToggleIndicator.Position = UDim2.new(0, 2, 0, 2)
+    ToggleIndicator.Size = UDim2.new(0, 16, 0, 16)
+    ToggleIndicator.Parent = ToggleContainer
 
-            local ToggleState = false
+    -- Add UICorner to the indicator (circle)
+    local IndicatorCorner = Instance.new("UICorner")
+    IndicatorCorner.CornerRadius = UDim.new(1, 0)
+    IndicatorCorner.Parent = ToggleIndicator
 
-            local function updateToggle()
-                if ToggleState then
-                    TweenService:Create(ToggleIndicator, TweenInfo.new(0.2), {Position = UDim2.new(1, -18, 0, 2)}):Play()
-                    TweenService:Create(ToggleContainer, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(0, 170, 255)}):Play()
-                else
-                    TweenService:Create(ToggleIndicator, TweenInfo.new(0.2), {Position = UDim2.new(0, 2, 0, 2)}):Play()
-                    TweenService:Create(ToggleContainer, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(30, 30, 30)}):Play()
-                end
-            end
+    -- Rest of the toggle logic remains unchanged...
+    local ToggleState = false
 
-            ToggleContainer.InputBegan:Connect(function(input, processed)
-                if not processed and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
-                    ToggleState = not ToggleState
-                    updateToggle()
-                    if config.Callback then
-                        config.Callback(ToggleState)
-                    end
-                end
-            end)
+    local function updateToggle()
+        if ToggleState then
+            TweenService:Create(ToggleIndicator, TweenInfo.new(0.2), {Position = UDim2.new(1, -18, 0, 2)}):Play()
+            TweenService:Create(ToggleContainer, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(0, 170, 255)}):Play()
+        else
+            TweenService:Create(ToggleIndicator, TweenInfo.new(0.2), {Position = UDim2.new(0, 2, 0, 2)}):Play()
+            TweenService:Create(ToggleContainer, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(30, 30, 30)}):Play()
         end
+    end
+
+    ToggleContainer.InputBegan:Connect(function(input, processed)
+        if not processed and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
+            ToggleState = not ToggleState
+            updateToggle()
+            if config.Callback then
+                config.Callback(ToggleState)
+            end
+        end
+    end)
+end
 
         function Tab:AddButton(config)
             local ButtonElement = CreateElement("Button", 30)
