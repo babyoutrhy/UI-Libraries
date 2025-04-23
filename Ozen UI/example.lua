@@ -19,12 +19,16 @@ Tab1:AddLabel({
 
 Tab1:AddToggle({
     Text = "Toggle",
-    Callback = function(state) print("Toggle set to:", state) end
+    Callback = function(state)
+        print("Toggle set to:", state) 
+    end
 })
 
 Tab1:AddButton({
     Text = "Button",
-    Callback = function() print("Button clicked!") end
+    Callback = function() 
+        print("Button clicked!")
+    end
 })
 
 Tab1:AddSlider({
