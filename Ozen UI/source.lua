@@ -1,6 +1,6 @@
-local Library = {}
+local Ozen = {}
 
-function Library:CreateWindow(name)
+function Ozen:CreateWindow(name)
     local UserInputService = game:GetService("UserInputService")
     local TweenService = game:GetService("TweenService")
     local textService = game:GetService("TextService")
@@ -8,7 +8,7 @@ function Library:CreateWindow(name)
     
     -- Main GUI
     local ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Name = "LibraryUI"
+    ScreenGui.Name = "OzenUI"
     ScreenGui.Parent = game.CoreGui
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
@@ -462,4 +462,4 @@ end
     return Window
 end
 
-return Library
+return Ozen
