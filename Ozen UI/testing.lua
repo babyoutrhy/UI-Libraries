@@ -413,12 +413,15 @@ end
 
 -- Notification System
 function Library:Notify(title, message, config)
+    local TweenService = game:GetService("TweenService") -- Add this line
     local config = config or {}
     local duration = config.Duration or 3
     local color = config.Color or Color3.fromRGB(40, 40, 40)
     
-    -- Create notification container if it doesn't exist
-    if not self.Notifications then
+    -- Ensure ScreenGui exists
+    if not self.ScreenGui or not self.ScreenGui.Parent then
+        self.ScreenGui = Instance.new("ScreenGui")
+        self.ScreenGui.Parent = game.CoreGui
         self.Notifications = Instance.new("Frame")
         self.Notifications.Name = "Notifications"
         self.Notifications.BackgroundTransparency = 1
