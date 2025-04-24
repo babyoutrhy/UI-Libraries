@@ -410,101 +410,107 @@ end
 
     return Window
 end
-end
 
 -- Notification System
-function Library:ShowNotification(text, duration)
-    duration = duration or 5  -- Default duration 5 seconds
-    local TweenService = game:GetService("TweenService")
-
-    -- Create notification GUI if not exists
-    if not self.NotificationsGui then
-        self.NotificationsGui = Instance.new("ScreenGui")
-        self.NotificationsGui.Name = "NotificationsGui"
-        self.NotificationsGui.Parent = game:GetService("CoreGui")
-        self.NotificationsGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-
-        local container = Instance.new("Frame")
-        container.Name = "NotificationsContainer"
-        container.AnchorPoint = Vector2.new(0.5, 1)
-        container.Position = UDim2.new(0.5, 0, 1, -50)  -- 50px from bottom
-        container.Size = UDim2.new(0, 300, 0, 0)
-        container.BackgroundTransparency = 1
-        container.AutomaticSize = Enum.AutomaticSize.Y
-        container.Parent = self.NotificationsGui
-
+function Library:Notify(title, message, config)
+    local config = config or {}
+    local duration = config.Duration or 3
+    local color = config.Color or Color3.fromRGB(40, 40, 40)
+    
+    -- Create notification container if it doesn't exist
+    if not self.Notifications then
+        self.Notifications = Instance.new("Frame")
+        self.Notifications.Name = "Notifications"
+        self.Notifications.BackgroundTransparency = 1
+        self.Notifications.Size = UDim2.new(0.3, 0, 0, 0)
+        self.Notifications.Position = UDim2.new(0.65, 0, 0.02, 0)
+        self.Notifications.Parent = self.ScreenGui
+        
         local listLayout = Instance.new("UIListLayout")
-        listLayout.Parent = container
+        listLayout.Padding = UDim.new(0, 5)
+        listLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
         listLayout.SortOrder = Enum.SortOrder.LayoutOrder
-        listLayout.Padding = UDim.new(0, 10)
-        listLayout.VerticalAlignment = Enum.VerticalAlignment.Bottom
+        listLayout.Parent = self.Notifications
     end
 
-    local container = self.NotificationsGui:FindFirstChild("NotificationsContainer")
-    if not container then return end
-
     -- Create notification frame
-    local numNotifications = #container:GetChildren() - 1  -- Exclude UIListLayout
     local notification = Instance.new("Frame")
     notification.Name = "Notification"
-    notification.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    notification.BackgroundTransparency = 0.5
-    notification.AutomaticSize = Enum.AutomaticSize.Y
-    notification.Size = UDim2.new(1, 0, 0, 0)
-    notification.LayoutOrder = numNotifications + 1
-
-    -- Round corners
+    notification.BackgroundColor3 = color
+    notification.Size = UDim2.new(1, 0, 0, 60)
+    notification.Position = UDim2.new(1, 0, 0, 0)
+    notification.ClipsDescendants = true
+    notification.Parent = self.Notifications
+    
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0, 8)
     corner.Parent = notification
-
-    -- Padding
-    local padding = Instance.new("UIPadding")
-    padding.PaddingLeft = UDim.new(0, 15)
-    padding.PaddingRight = UDim.new(0, 15)
-    padding.PaddingTop = UDim.new(0, 10)
-    padding.PaddingBottom = UDim.new(0, 10)
-    padding.Parent = notification
-
-    -- Notification text
-    local label = Instance.new("TextLabel")
-    label.Name = "Text"
-    label.BackgroundTransparency = 1
-    label.Size = UDim2.new(1, 0, 0, 0)
-    label.AutomaticSize = Enum.AutomaticSize.Y
-    label.Font = Enum.Font.Gotham
-    label.Text = text
-    label.TextColor3 = Color3.fromRGB(255, 255, 255)
-    label.TextSize = 14
-    label.TextWrapped = true
-    label.TextXAlignment = Enum.TextXAlignment.Left
-    label.Parent = notification
-
-    -- Fade animation group
-    local canvasGroup = Instance.new("CanvasGroup")
-    canvasGroup.GroupTransparency = 1
-    canvasGroup.Parent = notification
-
-    notification.Parent = container
-
-    -- Animate in
-    local tweenIn = TweenService:Create(canvasGroup, TweenInfo.new(0.5), {
-        GroupTransparency = 0
+    
+    -- Title
+    local titleLabel = Instance.new("TextLabel")
+    titleLabel.Name = "Title"
+    titleLabel.Text = title
+    titleLabel.Font = Enum.Font.GothamBold
+    titleLabel.TextColor3 = Color3.new(1, 1, 1)
+    titleLabel.TextSize = 14
+    titleLabel.Position = UDim2.new(0, 15, 0, 10)
+    titleLabel.Size = UDim2.new(1, -30, 0, 20)
+    titleLabel.BackgroundTransparency = 1
+    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    titleLabel.Parent = notification
+    
+    -- Message
+    local messageLabel = Instance.new("TextLabel")
+    messageLabel.Name = "Message"
+    messageLabel.Text = message
+    messageLabel.Font = Enum.Font.Gotham
+    messageLabel.TextColor3 = Color3.new(0.8, 0.8, 0.8)
+    messageLabel.TextSize = 12
+    messageLabel.Position = UDim2.new(0, 15, 0, 30)
+    messageLabel.Size = UDim2.new(1, -30, 0, 25)
+    messageLabel.BackgroundTransparency = 1
+    messageLabel.TextXAlignment = Enum.TextXAlignment.Left
+    messageLabel.TextWrapped = true
+    messageLabel.Parent = notification
+    
+    -- Progress bar
+    local progressBar = Instance.new("Frame")
+    progressBar.Name = "Progress"
+    progressBar.BackgroundColor3 = Color3.new(1, 1, 1)
+    progressBar.Size = UDim2.new(1, 0, 0, 2)
+    progressBar.Position = UDim2.new(0, 0, 1, -2)
+    progressBar.AnchorPoint = Vector2.new(0, 1)
+    progressBar.Parent = notification
+    
+    local progressCorner = Instance.new("UICorner")
+    progressCorner.CornerRadius = UDim.new(0, 8)
+    progressCorner.Parent = progressBar
+    
+    -- Animation
+    notification.Visible = true
+    local tweenInfoIn = TweenInfo.new(0.3, Enum.EasingStyle.Quint)
+    local tweenIn = TweenService:Create(notification, tweenInfoIn, {
+        Position = UDim2.new(0, 0, 0, 0)
     })
+    
+    local tweenInfoOut = TweenInfo.new(0.3, Enum.EasingStyle.Quint)
+    local tweenOut = TweenService:Create(notification, tweenInfoOut, {
+        Position = UDim2.new(1, 0, 0, 0)
+    })
+    
+    -- Progress animation
+    local progressTween = TweenService:Create(progressBar, TweenInfo.new(duration, Enum.EasingStyle.Linear), {
+        Size = UDim2.new(0, 0, 0, 2)
+    })
+    
     tweenIn:Play()
-
-    -- Wait duration
-    task.wait(duration)
-
-    -- Animate out
-    local tweenOut = TweenService:Create(canvasGroup, TweenInfo.new(0.5), {
-        GroupTransparency = 1
-    })
-    tweenOut:Play()
-
-    -- Cleanup
-    tweenOut.Completed:Wait()
-    notification:Destroy()
+    progressTween:Play()
+    
+    task.delay(duration, function()
+        tweenOut:Play()
+        tweenOut.Completed:Wait()
+        notification:Destroy()
+    end)
 end
 
 return Library
