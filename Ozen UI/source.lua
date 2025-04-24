@@ -193,7 +193,58 @@ function Library:CreateWindow(name)
         end)
 
         local Tab = {}
+
+function Tab:AddTextbox(config)
+    local TextboxElement = CreateElement("Textbox", 30)
+    TextboxElement.LayoutOrder = #TabContent:GetChildren()
+    TextboxElement.Parent = TabContent
+
+    local TextboxTitle = Instance.new("TextLabel")
+    TextboxTitle.Name = "Title"
+    TextboxTitle.BackgroundTransparency = 1
+    TextboxTitle.Position = UDim2.new(0, 10, 0, 0)
+    TextboxTitle.Size = UDim2.new(0, 200, 1, 0)
+    TextboxTitle.Font = Enum.Font.Gotham
+    TextboxTitle.Text = config.Text
+    TextboxTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+    TextboxTitle.TextSize = 12
+    TextboxTitle.TextXAlignment = Enum.TextXAlignment.Left
+    TextboxTitle.Parent = TextboxElement
+
+    local InputBox = Instance.new("TextBox")
+    InputBox.Name = "Input"
+    InputBox.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    InputBox.Position = UDim2.new(1, -150, 0.5, -10)
+    InputBox.Size = UDim2.new(0, 140, 0, 20)
+    InputBox.Font = Enum.Font.Gotham
+    InputBox.PlaceholderText = config.Placeholder or ""
+    InputBox.Text = config.Default or ""
+    InputBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+    InputBox.TextSize = 12
+    InputBox.TextXAlignment = Enum.TextXAlignment.Left
+    InputBox.Parent = TextboxElement
+
+    local Corner = Instance.new("UICorner")
+    Corner.CornerRadius = UDim.new(0, 4)
+    Corner.Parent = InputBox
+
+    InputBox.Focused:Connect(function()
+        TweenService:Create(InputBox, TweenInfo.new(0.2), {
+            BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+        }):Play()
+    end)
+
+    InputBox.FocusLost:Connect(function(enterPressed)
+        TweenService:Create(InputBox, TweenInfo.new(0.2), {
+            BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+        }):Play()
         
+        if enterPressed and config.Callback then
+            config.Callback(InputBox.Text)
+        end
+    end)
+end
+
 function Tab:AddToggle(config)
     local ToggleElement = CreateElement("Toggle", 30)
     ToggleElement.LayoutOrder = #TabContent:GetChildren()
