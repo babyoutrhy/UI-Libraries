@@ -411,72 +411,104 @@ end
     return Window
 end
 
--- Notification System
+-- Notifier
 function Library:Notify(title, message, config)
-    local TweenService = game:GetService("TweenService") -- Add this line
+    local TweenService = game:GetService("TweenService")
+    local UserInputService = game:GetService("UserInputService")
+    
     local config = config or {}
     local duration = config.Duration or 3
     local color = config.Color or Color3.fromRGB(40, 40, 40)
     
-    -- Ensure ScreenGui exists
-    if not self.ScreenGui or not self.ScreenGui.Parent then
-        self.ScreenGui = Instance.new("ScreenGui")
-        self.ScreenGui.Parent = game.CoreGui
+    -- Mobile-responsive sizing
+    local isMobile = UserInputService.TouchEnabled
+    local notificationWidth = isMobile and UDim2.new(0.9, 0, 0, 0) or UDim2.new(0.3, 0, 0, 0)
+    local maxHeight = isMobile and 100 or 80
+    
+    -- Create notification container at bottom-right
+    if not self.Notifications then
         self.Notifications = Instance.new("Frame")
         self.Notifications.Name = "Notifications"
         self.Notifications.BackgroundTransparency = 1
-        self.Notifications.Size = UDim2.new(0.3, 0, 0, 0)
-        self.Notifications.Position = UDim2.new(0.65, 0, 0.02, 0)
+        self.Notifications.Size = UDim2.new(notificationWidth.X.Scale, 0, 0.4, 0)
+        self.Notifications.Position = UDim2.new(1, -10, 1, -10) -- Bottom-right with padding
+        self.Notifications.AnchorPoint = Vector2.new(1, 1) -- Anchor to bottom-right
         self.Notifications.Parent = self.ScreenGui
         
         local listLayout = Instance.new("UIListLayout")
         listLayout.Padding = UDim.new(0, 5)
         listLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
+        listLayout.VerticalAlignment = Enum.VerticalAlignment.Bottom
         listLayout.SortOrder = Enum.SortOrder.LayoutOrder
         listLayout.Parent = self.Notifications
     end
 
-    -- Create notification frame
+    -- Create notification frame with mobile adjustments
     local notification = Instance.new("Frame")
     notification.Name = "Notification"
     notification.BackgroundColor3 = color
-    notification.Size = UDim2.new(1, 0, 0, 60)
-    notification.Position = UDim2.new(1, 0, 0, 0)
+    notification.Size = notificationWidth
+    notification.Position = UDim2.new(1, 0, 1, 0) -- Start off-screen to right
     notification.ClipsDescendants = true
     notification.Parent = self.Notifications
     
+    -- Mobile-optimized elements
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0, 8)
     corner.Parent = notification
     
-    -- Title
+    local content = Instance.new("Frame")
+    content.Name = "Content"
+    content.BackgroundTransparency = 1
+    content.Size = UDim2.new(1, -20, 1, -20)
+    content.Position = UDim2.new(0, 10, 0, 10)
+    content.Parent = notification
+    
+    -- Title with mobile text sizing
     local titleLabel = Instance.new("TextLabel")
     titleLabel.Name = "Title"
     titleLabel.Text = title
     titleLabel.Font = Enum.Font.GothamBold
     titleLabel.TextColor3 = Color3.new(1, 1, 1)
-    titleLabel.TextSize = 14
-    titleLabel.Position = UDim2.new(0, 15, 0, 10)
-    titleLabel.Size = UDim2.new(1, -30, 0, 20)
+    titleLabel.TextSize = isMobile and 16 or 14
+    titleLabel.Size = UDim2.new(1, 0, 0, isMobile and 25 or 20)
     titleLabel.BackgroundTransparency = 1
     titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-    titleLabel.Parent = notification
+    titleLabel.Parent = content
     
-    -- Message
+    -- Message with mobile optimization
     local messageLabel = Instance.new("TextLabel")
     messageLabel.Name = "Message"
     messageLabel.Text = message
     messageLabel.Font = Enum.Font.Gotham
     messageLabel.TextColor3 = Color3.new(0.8, 0.8, 0.8)
-    messageLabel.TextSize = 12
-    messageLabel.Position = UDim2.new(0, 15, 0, 30)
-    messageLabel.Size = UDim2.new(1, -30, 0, 25)
+    messageLabel.TextSize = isMobile and 14 or 12
+    messageLabel.Size = UDim2.new(1, 0, 1, -titleLabel.Size.Y.Offset)
+    messageLabel.Position = UDim2.new(0, 0, 0, titleLabel.Size.Y.Offset)
     messageLabel.BackgroundTransparency = 1
     messageLabel.TextXAlignment = Enum.TextXAlignment.Left
     messageLabel.TextWrapped = true
-    messageLabel.Parent = notification
+    messageLabel.Parent = content
     
-    -- Progress bar
+    -- Progress bar with close button for mobile
+    local bottomBar = Instance.new("Frame")
+    bottomBar.Name = "BottomBar"
+    bottomBar.BackgroundTransparency = 1
+    bottomBar.Size = UDim2.new(1, 0, 0, 20)
+    bottomBar.Position = UDim2.new(0, 0, 1, -20)
+    bottomBar.Parent = notification
+    
+    local closeButton = Instance.new("TextButton")
+    closeButton.Name = "Close"
+    closeButton.Text = "✕"
+    closeButton.Font = Enum.Font.GothamBold
+    closeButton.TextSize = isMobile and 18 or 14
+    closeButton.Size = UDim2.new(0, 30, 1, 0)
+    closeButton.Position = UDim2.new(1, -30, 0, 0)
+    closeButton.BackgroundTransparency = 1
+    closeButton.TextColor3 = Color3.new(1, 1, 1)
+    closeButton.Parent = bottomBar
+    
     local progressBar = Instance.new("Frame")
     progressBar.Name = "Progress"
     progressBar.BackgroundColor3 = Color3.new(1, 1, 1)
@@ -485,20 +517,20 @@ function Library:Notify(title, message, config)
     progressBar.AnchorPoint = Vector2.new(0, 1)
     progressBar.Parent = notification
     
-    local progressCorner = Instance.new("UICorner")
-    progressCorner.CornerRadius = UDim.new(0, 8)
-    progressCorner.Parent = progressBar
-    
-    -- Animation
+    -- Animation setup
     notification.Visible = true
-    local tweenInfoIn = TweenInfo.new(0.3, Enum.EasingStyle.Quint)
-    local tweenIn = TweenService:Create(notification, tweenInfoIn, {
-        Position = UDim2.new(0, 0, 0, 0)
+    local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quint)
+    
+    -- Mobile: Slide up from bottom, Desktop: Slide in from right
+    local enterPosition = isMobile and UDim2.new(0, 0, 1, -notification.AbsoluteSize.Y) 
+        or UDim2.new(0, 0, 0, 0)
+    
+    local tweenIn = TweenService:Create(notification, tweenInfo, {
+        Position = enterPosition
     })
     
-    local tweenInfoOut = TweenInfo.new(0.3, Enum.EasingStyle.Quint)
-    local tweenOut = TweenService:Create(notification, tweenInfoOut, {
-        Position = UDim2.new(1, 0, 0, 0)
+    local tweenOut = TweenService:Create(notification, tweenInfo, {
+        Position = UDim2.new(1, 0, isMobile and 1 or 0, 0)
     })
     
     -- Progress animation
@@ -506,13 +538,22 @@ function Library:Notify(title, message, config)
         Size = UDim2.new(0, 0, 0, 2)
     })
     
+    -- Close functionality
+    closeButton.MouseButton1Click:Connect(function()
+        tweenOut:Play()
+        tweenOut.Completed:Wait()
+        notification:Destroy()
+    end)
+    
     tweenIn:Play()
     progressTween:Play()
     
     task.delay(duration, function()
-        tweenOut:Play()
-        tweenOut.Completed:Wait()
-        notification:Destroy()
+        if notification and notification.Parent then
+            tweenOut:Play()
+            tweenOut.Completed:Wait()
+            notification:Destroy()
+        end
     end)
 end
 
