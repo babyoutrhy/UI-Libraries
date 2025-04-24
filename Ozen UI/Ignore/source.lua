@@ -3,7 +3,7 @@ local Ozen = {}
 local notificationOffset = UDim2.new(1, -20, 1, -20)  -- Base position for notifications
 local notificationSpacing = 5  -- Space between notifications
 
-function Library:createNotifier(title, message, duration)
+function Ozen:createNotifier(title, message, duration)
     duration = duration or 5  -- Default duration 5 seconds
     
     local notification = Instance.new("Frame")
