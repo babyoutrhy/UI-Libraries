@@ -500,7 +500,7 @@ function Library:Notify(title, message, config)
     
     local closeButton = Instance.new("TextButton")
     closeButton.Name = "Close"
-    closeButton.Text = "✕"
+    closeButton.Text = "X"
     closeButton.Font = Enum.Font.GothamBold
     closeButton.TextSize = isMobile and 18 or 14
     closeButton.Size = UDim2.new(0, 30, 1, 0)
