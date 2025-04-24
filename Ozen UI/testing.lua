@@ -1,8 +1,9 @@
 -- It is better NOT to use this loadstring, it may contain some errors for the UI, use the source version: https://raw.githubusercontent.com/rhywme/UI-Libraries/main/Ozen%20UI/source.lua
-
-print[[It is better NOT to use this loadstring:
+local warning = print[[It is better NOT to use this loadstring:
           - It may contain some errors for the UI;
 	      - Use the source version: https://raw.githubusercontent.com/rhywme/UI-Libraries/main/Ozen%20UI/source.lua]]
+
+warning()
 
 local Library = {}
 
