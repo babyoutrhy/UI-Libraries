@@ -1,5 +1,124 @@
 local Ozen = {}
 
+local notificationOffset = UDim2.new(1, -20, 1, -20)  -- Base position for notifications
+local notificationSpacing = 5  -- Space between notifications
+
+function Library:createNotifier(title, message, duration)
+    duration = duration or 5  -- Default duration 5 seconds
+    
+    local notification = Instance.new("Frame")
+    notification.Name = "notification"
+    notification.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    notification.BackgroundTransparency = 0.2
+    notification.Size = UDim2.new(0, 300, 0, 80)
+    notification.Position = notificationOffset
+    notification.AnchorPoint = Vector2.new(1, 1)
+    notification.Parent = self.screenGui
+    
+    -- Mobile adaptation
+    if userInputService.TouchEnabled then
+        notification.Size = UDim2.new(1, -40, 0, 100)
+        notification.Position = UDim2.new(0.5, 0, 1, -20)
+        notification.AnchorPoint = Vector2.new(0.5, 1)
+    end
+    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 8)
+    corner.Parent = notification
+    
+    local titleLabel = Instance.new("TextLabel")
+    titleLabel.Name = "title"
+    titleLabel.Font = Enum.Font.GothamBold
+    titleLabel.Text = title
+    titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    titleLabel.TextSize = 14
+    titleLabel.Position = UDim2.new(0, 15, 0, 10)
+    titleLabel.Size = UDim2.new(1, -30, 0, 20)
+    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    titleLabel.BackgroundTransparency = 1
+    titleLabel.Parent = notification
+    
+    local messageLabel = Instance.new("TextLabel")
+    messageLabel.Name = "message"
+    messageLabel.Font = Enum.Font.Gotham
+    messageLabel.Text = message
+    messageLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+    messageLabel.TextSize = 12
+    messageLabel.Position = UDim2.new(0, 15, 0, 35)
+    messageLabel.Size = UDim2.new(1, -30, 1, -45)
+    messageLabel.TextWrapped = true
+    messageLabel.TextXAlignment = Enum.TextXAlignment.Left
+    messageLabel.TextYAlignment = Enum.TextYAlignment.Top
+    messageLabel.BackgroundTransparency = 1
+    messageLabel.Parent = notification
+    
+    -- Close button (touch friendly)
+    local closeButton = Instance.new("TextButton")
+    closeButton.Name = "close"
+    closeButton.Text = "×"
+    closeButton.TextSize = 24
+    closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    closeButton.BackgroundTransparency = 1
+    closeButton.Size = UDim2.new(0, 40, 0, 40)
+    closeButton.Position = UDim2.new(1, -40, 0, 0)
+    closeButton.AnchorPoint = Vector2.new(1, 0)
+    closeButton.Parent = notification
+    
+    -- Animation
+    notification.Position += UDim2.new(0, 0, 0, notification.AbsoluteSize.Y + 50)
+    tweenService:Create(notification, TweenInfo.new(0.3), {
+        Position = notificationOffset
+    }):Play()
+    
+    -- Auto-remove system
+    local notifications = self.notifications or {}
+    table.insert(notifications, notification)
+    self.notifications = notifications
+    
+    -- Update positions for existing notifications
+    for i, notif in ipairs(notifications) do
+        local targetY = notificationOffset.Y.Offset - 
+                      (i-1) * (notification.AbsoluteSize.Y + notificationSpacing)
+        tweenService:Create(notif, TweenInfo.new(0.3), {
+            Position = UDim2.new(notificationOffset.X.Scale, notificationOffset.X.Offset,
+                               notificationOffset.Y.Scale, targetY)
+        }):Play()
+    end
+    
+    local function remove()
+        tweenService:Create(notification, TweenInfo.new(0.3), {
+            BackgroundTransparency = 1,
+            Position = notification.Position + UDim2.new(0, 0, 0, 50)
+        }):Play()
+        wait(0.3)
+        notification:Destroy()
+        
+        -- Remove from notifications table
+        for i,v in pairs(self.notifications) do
+            if v == notification then
+                table.remove(self.notifications, i)
+                break
+            end
+        end
+    end
+    
+    closeButton.MouseButton1Click:Connect(remove)
+    if duration then
+        delay(duration, remove)
+    end
+    
+    -- Mobile-friendly tap to close
+    if userInputService.TouchEnabled then
+        notification.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.Touch then
+                remove()
+            end
+        end)
+    end
+    
+    return notification
+end
+
 function Ozen:CreateWindow(name)
     local UserInputService = game:GetService("UserInputService")
     local TweenService = game:GetService("TweenService")
