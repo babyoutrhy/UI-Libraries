@@ -31,6 +31,15 @@ Tab1:AddButton({
     end
 })
 
+Tab1:AddTextbox({
+    Text = "Textbox",
+    Placeholder = "Enter text",
+    Default = "Enter text",
+    Callback = function(text)
+	print(text)
+    end
+})
+
 Tab1:AddSlider({
     Text = "Walk Speed",
     Min = 16,    -- Normal Roblox speed
