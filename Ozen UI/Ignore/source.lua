@@ -548,11 +548,19 @@ function Tab:AddDropdown(config)
             local buttonPos = SelectionButton.AbsolutePosition
             local buttonSize = SelectionButton.AbsoluteSize
             
-            -- Calculate position relative to screen
-            DropdownList.Position = UDim2.new(
-                0, buttonPos.X,
-                0, buttonPos.Y + buttonSize.Y + 2
-            )
+            -- Get screen size for boundary checking
+            local screenSize = workspace.CurrentCamera.ViewportSize
+            
+            -- Calculate position with boundary checking
+            local posX = buttonPos.X
+            local posY = buttonPos.Y + buttonSize.Y + 2
+            
+            -- Ensure dropdown stays on screen
+            if posY + DropdownList.AbsoluteSize.Y > screenSize.Y then
+                posY = buttonPos.Y - DropdownList.AbsoluteSize.Y - 2
+            end
+            
+            DropdownList.Position = UDim2.new(0, posX, 0, posY)
         end
     end
 
@@ -608,10 +616,14 @@ function Tab:AddDropdown(config)
         end
     end)
     
-    -- Update position when window moves
-    RunService.Heartbeat:Connect(function()
+    -- Continuously update position when visible
+    local positionUpdateConnection
+    DropdownList:GetPropertyChangedSignal("Visible"):Connect(function()
         if DropdownList.Visible then
-            updateDropdownPosition()
+            positionUpdateConnection = RunService.Heartbeat:Connect(updateDropdownPosition)
+        elseif positionUpdateConnection then
+            positionUpdateConnection:Disconnect()
+            positionUpdateConnection = nil
         end
     end)
     
@@ -619,6 +631,21 @@ function Tab:AddDropdown(config)
     TabContent:GetPropertyChangedSignal("CanvasPosition"):Connect(function()
         if DropdownList.Visible then
             toggleDropdown()
+        end
+    end)
+    
+    -- Close dropdown when window moves
+    MainFrame:GetPropertyChangedSignal("Position"):Connect(function()
+        if DropdownList.Visible then
+            toggleDropdown()
+        end
+    end)
+    
+    -- Clean up when GUI is closed
+    ScreenGui:GetPropertyChangedSignal("Parent"):Connect(function()
+        if not ScreenGui.Parent then
+            DropdownList:Destroy()
+            DropdownScrim:Destroy()
         end
     end)
 end
