@@ -491,15 +491,15 @@ function Tab:AddDropdown(config)
     Corner.CornerRadius = UDim.new(0, 4)
     Corner.Parent = SelectionButton
 
-    -- Create dropdown list as a child of the ScreenGui to ensure it's on top
+    -- Create dropdown list as a child of the main window
     local DropdownList = Instance.new("Frame")
     DropdownList.Name = "DropdownList"
     DropdownList.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
     DropdownList.BorderSizePixel = 0
     DropdownList.Size = UDim2.new(0, 140, 0, 0)
     DropdownList.Visible = false
-    DropdownList.ZIndex = 100 -- Very high z-index
-    DropdownList.Parent = ScreenGui
+    DropdownList.ZIndex = 100
+    DropdownList.Parent = MainFrame
 
     local Corner2 = Instance.new("UICorner")
     Corner2.CornerRadius = UDim.new(0, 4)
@@ -542,20 +542,25 @@ function Tab:AddDropdown(config)
         DropdownList.Size = UDim2.new(0, 140, 0, maxHeight)
     end
 
-    local function toggleDropdown()
+    local function updateDropdownPosition()
         if DropdownList.Visible then
-            DropdownList.Visible = false
-            DropdownScrim.Visible = false
-        else
             -- Position dropdown below the selection button
             local buttonPos = SelectionButton.AbsolutePosition
             local buttonSize = SelectionButton.AbsoluteSize
             
             DropdownList.Position = UDim2.new(
-                0, buttonPos.X,
-                0, buttonPos.Y + buttonSize.Y + 2
+                0, buttonPos.X - MainFrame.AbsolutePosition.X,
+                0, buttonPos.Y - MainFrame.AbsolutePosition.Y + buttonSize.Y
             )
-            
+        end
+    end
+
+    local function toggleDropdown()
+        if DropdownList.Visible then
+            DropdownList.Visible = false
+            DropdownScrim.Visible = false
+        else
+            updateDropdownPosition()
             DropdownList.Visible = true
             DropdownScrim.Visible = true
         end
@@ -601,8 +606,18 @@ function Tab:AddDropdown(config)
             toggleDropdown()
         end
     end)
+    
+    -- Update position when window moves
+    MainFrame:GetPropertyChangedSignal("Position"):Connect(updateDropdownPosition)
+    
+    -- Close dropdown when tab content scrolls
+    TabContent:GetPropertyChangedSignal("CanvasPosition"):Connect(function()
+        if DropdownList.Visible then
+            toggleDropdown()
+        end
+    end)
 end
-
+        
         return Tab
     end
 
