@@ -457,50 +457,52 @@ function Tab:AddSlider(config)
 end
 
 function Tab:AddDropdown(config)
-    local DropdownElement = CreateElement("Dropdown", 30)
+    local DropdownElement = CreateElement("Dropdown", 50)  -- Increased height to accommodate dropdown
     DropdownElement.LayoutOrder = #TabContent:GetChildren()
     DropdownElement.Parent = TabContent
-    DropdownElement.ZIndex = 10  -- Higher z-index for the element
+    DropdownElement.ZIndex = 10  -- Set base z-index
 
     local DropdownTitle = Instance.new("TextLabel")
     DropdownTitle.Name = "Title"
     DropdownTitle.BackgroundTransparency = 1
     DropdownTitle.Position = UDim2.new(0, 10, 0, 0)
-    DropdownTitle.Size = UDim2.new(0, 200, 1, 0)
+    DropdownTitle.Size = UDim2.new(0, 200, 0, 20)
     DropdownTitle.Font = Enum.Font.Gotham
     DropdownTitle.Text = config.Text
     DropdownTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
     DropdownTitle.TextSize = 12
     DropdownTitle.TextXAlignment = Enum.TextXAlignment.Left
+    DropdownTitle.ZIndex = 11  -- Higher than parent
     DropdownTitle.Parent = DropdownElement
 
     local SelectionButton = Instance.new("TextButton")
     SelectionButton.Name = "SelectionButton"
     SelectionButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    SelectionButton.Position = UDim2.new(1, -150, 0.5, -10)
-    SelectionButton.Size = UDim2.new(0, 140, 0, 20)
+    SelectionButton.Position = UDim2.new(0, 10, 0, 25)  -- Position below title
+    SelectionButton.Size = UDim2.new(1, -20, 0, 20)
     SelectionButton.Font = Enum.Font.Gotham
     SelectionButton.Text = config.Default or "Select"
     SelectionButton.TextColor3 = Color3.fromRGB(255, 255, 255)
     SelectionButton.TextSize = 12
-    SelectionButton.ZIndex = 11  -- Higher than the element
+    SelectionButton.ZIndex = 11
     SelectionButton.Parent = DropdownElement
 
     local Corner = Instance.new("UICorner")
     Corner.CornerRadius = UDim.new(0, 4)
     Corner.Parent = SelectionButton
 
-    -- Create dropdown list as a direct child of MainFrame to ensure it renders above other elements
+    -- Create dropdown list as a child of the dropdown element
     local DropdownList = Instance.new("ScrollingFrame")
     DropdownList.Name = "DropdownList"
     DropdownList.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
     DropdownList.BorderSizePixel = 0
-    DropdownList.Size = UDim2.new(0, 140, 0, 0)
+    DropdownList.Position = UDim2.new(0, 0, 0, 50)  -- Position below selection button
+    DropdownList.Size = UDim2.new(1, 0, 0, 0)
     DropdownList.Visible = false
     DropdownList.ScrollBarThickness = 5
     DropdownList.CanvasSize = UDim2.new(0, 0, 0, 0)
-    DropdownList.ZIndex = 50  -- Very high z-index
-    DropdownList.Parent = MainFrame
+    DropdownList.ZIndex = 50  -- Highest z-index
+    DropdownList.Parent = DropdownElement
 
     local Corner2 = Instance.new("UICorner")
     Corner2.CornerRadius = UDim.new(0, 4)
@@ -511,15 +513,6 @@ function Tab:AddDropdown(config)
     ListLayout.SortOrder = Enum.SortOrder.LayoutOrder
     ListLayout.Padding = UDim.new(0, 2)
 
-    -- Create a scrim/overlay to ensure dropdown appears above other elements
-    local DropdownScrim = Instance.new("Frame")
-    DropdownScrim.Name = "DropdownScrim"
-    DropdownScrim.BackgroundTransparency = 1
-    DropdownScrim.Size = UDim2.new(1, 0, 1, 0)
-    DropdownScrim.Visible = false
-    DropdownScrim.ZIndex = 40  -- Below dropdown but above other elements
-    DropdownScrim.Parent = MainFrame
-    
     local function updateListSize()
         local totalHeight = 0
         for _, child in ipairs(DropdownList:GetChildren()) do
@@ -532,25 +525,14 @@ function Tab:AddDropdown(config)
 
     local function toggleDropdown()
         if DropdownList.Visible then
+            DropdownList:TweenSize(UDim2.new(1, 0, 0, 0), "Out", "Quad", 0.2, true)
+            wait(0.2)
             DropdownList.Visible = false
-            DropdownScrim.Visible = false
-            DropdownList:TweenSize(UDim2.new(0, 140, 0, 0), "Out", "Quad", 0.2, true)
         else
-            -- Position dropdown below the selection button
-            local buttonPos = SelectionButton.AbsolutePosition
-            local buttonSize = SelectionButton.AbsoluteSize
-            local framePos = MainFrame.AbsolutePosition
-            
-            DropdownList.Position = UDim2.new(
-                0, buttonPos.X - framePos.X,
-                0, buttonPos.Y - framePos.Y + buttonSize.Y + 5
-            )
-            
             DropdownList.Visible = true
-            DropdownScrim.Visible = true
-            DropdownList.Size = UDim2.new(0, 140, 0, 0)
+            DropdownList.Size = UDim2.new(1, 0, 0, 0)
             DropdownList:TweenSize(
-                UDim2.new(0, 140, 0, math.min(100, DropdownList.CanvasSize.Y.Offset)), 
+                UDim2.new(1, 0, 0, math.min(100, DropdownList.CanvasSize.Y.Offset)), 
                 "Out", "Quad", 0.2, true
             )
         end
@@ -567,7 +549,7 @@ function Tab:AddDropdown(config)
         OptionButton.TextColor3 = Color3.fromRGB(255, 255, 255)
         OptionButton.TextSize = 12
         OptionButton.LayoutOrder = i
-        OptionButton.ZIndex = 51  -- Higher than the dropdown list
+        OptionButton.ZIndex = 51  -- Highest z-index
         OptionButton.Parent = DropdownList
 
         local OptionCorner = Instance.new("UICorner")
@@ -590,13 +572,26 @@ function Tab:AddDropdown(config)
 
     SelectionButton.MouseButton1Click:Connect(toggleDropdown)
     
-    -- Close dropdown when clicking on scrim
-    DropdownScrim.MouseButton1Click:Connect(function()
-        if DropdownList.Visible then
-            toggleDropdown()
+    -- Close dropdown when clicking outside
+    game:GetService("UserInputService").InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            local absPos = input.Position
+            local elementAbs = DropdownElement.AbsolutePosition
+            local elementSize = DropdownElement.AbsoluteSize
+            
+            -- Check if click is outside the dropdown element
+            if absPos.X < elementAbs.X or 
+               absPos.X > elementAbs.X + elementSize.X or 
+               absPos.Y < elementAbs.Y or 
+               absPos.Y > elementAbs.Y + elementSize.Y then
+                if DropdownList.Visible then
+                    toggleDropdown()
+                end
+            end
         end
     end)
 end
+
         return Tab
     end
 
