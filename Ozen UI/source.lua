@@ -208,7 +208,7 @@ function Tab:AddTextbox(config)
     TextboxTitle.Text = config.Text
     TextboxTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
     TextboxTitle.TextSize = 12
-    TextboxTitle.TextXAlignment = Enum.TextXAlignment.Left
+    TextboxTitle.TextXAlignment = Enum.TextXAlignment.Center -- From Left to Center
     TextboxTitle.Parent = TextboxElement
 
     local InputBox = Instance.new("TextBox")
