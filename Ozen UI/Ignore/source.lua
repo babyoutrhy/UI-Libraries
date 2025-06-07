@@ -491,7 +491,7 @@ function Tab:AddDropdown(config)
     Corner.CornerRadius = UDim.new(0, 4)
     Corner.Parent = SelectionButton
 
-    -- Create dropdown list as a child of the main window
+    -- Create dropdown list as a child of the ScreenGui
     local DropdownList = Instance.new("Frame")
     DropdownList.Name = "DropdownList"
     DropdownList.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
@@ -499,7 +499,7 @@ function Tab:AddDropdown(config)
     DropdownList.Size = UDim2.new(0, 140, 0, 0)
     DropdownList.Visible = false
     DropdownList.ZIndex = 100
-    DropdownList.Parent = MainFrame
+    DropdownList.Parent = ScreenGui
 
     local Corner2 = Instance.new("UICorner")
     Corner2.CornerRadius = UDim.new(0, 4)
@@ -548,9 +548,10 @@ function Tab:AddDropdown(config)
             local buttonPos = SelectionButton.AbsolutePosition
             local buttonSize = SelectionButton.AbsoluteSize
             
+            -- Calculate position relative to screen
             DropdownList.Position = UDim2.new(
-                0, buttonPos.X - MainFrame.AbsolutePosition.X,
-                0, buttonPos.Y - MainFrame.AbsolutePosition.Y + buttonSize.Y
+                0, buttonPos.X,
+                0, buttonPos.Y + buttonSize.Y + 2
             )
         end
     end
@@ -608,7 +609,11 @@ function Tab:AddDropdown(config)
     end)
     
     -- Update position when window moves
-    MainFrame:GetPropertyChangedSignal("Position"):Connect(updateDropdownPosition)
+    RunService.Heartbeat:Connect(function()
+        if DropdownList.Visible then
+            updateDropdownPosition()
+        end
+    end)
     
     -- Close dropdown when tab content scrolls
     TabContent:GetPropertyChangedSignal("CanvasPosition"):Connect(function()
