@@ -208,7 +208,7 @@ function Tab:AddTextbox(config)
     TextboxTitle.Text = config.Text
     TextboxTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
     TextboxTitle.TextSize = 12
-    TextboxTitle.TextXAlignment = Enum.TextXAlignment.Center -- From Left to Center
+    TextboxTitle.TextXAlignment = Enum.TextXAlignment.Left
     TextboxTitle.Parent = TextboxElement
 
     local InputBox = Instance.new("TextBox")
@@ -221,7 +221,7 @@ function Tab:AddTextbox(config)
     InputBox.Text = config.Default or ""
     InputBox.TextColor3 = Color3.fromRGB(255, 255, 255)
     InputBox.TextSize = 12
-    InputBox.TextXAlignment = Enum.TextXAlignment.Left
+    InputBox.TextXAlignment = Enum.TextXAlignment.Center -- From Left to Center
     InputBox.Parent = TextboxElement
 
     local Corner = Instance.new("UICorner")
