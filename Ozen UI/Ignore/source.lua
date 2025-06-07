@@ -18,7 +18,7 @@ function Ozen:CreateWindow(name)
     MainFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
     MainFrame.BorderSizePixel = 0
     MainFrame.Position = UDim2.new(0.3, 0, 0.3, 0)
-    MainFrame.Size = UDim2.new(0, 450, 0, 500)
+    MainFrame.Size = UDim2.new(0, 350, 0, 400)
     MainFrame.Parent = ScreenGui
 
     -- Title Bar
@@ -26,7 +26,7 @@ function Ozen:CreateWindow(name)
     TitleBar.Name = "TitleBar"
     TitleBar.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     TitleBar.BorderSizePixel = 0
-    TitleBar.Size = UDim2.new(1, 0, 0, 40)
+    TitleBar.Size = UDim2.new(1, 0, 0, 30)
     TitleBar.Parent = MainFrame
 
     local Title = Instance.new("TextLabel")
@@ -37,7 +37,7 @@ function Ozen:CreateWindow(name)
     Title.Font = Enum.Font.Gotham
     Title.Text = name
     Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Title.TextSize = 18
+    Title.TextSize = 14
     Title.TextXAlignment = Enum.TextXAlignment.Left
     Title.Parent = TitleBar
 
@@ -45,11 +45,11 @@ function Ozen:CreateWindow(name)
     CloseButton.Name = "CloseButton"
     CloseButton.BackgroundTransparency = 1
     CloseButton.Position = UDim2.new(1, -30, 0, 0)
-    CloseButton.Size = UDim2.new(0, 40, 1, 0)
+    CloseButton.Size = UDim2.new(0, 30, 1, 0)
     CloseButton.Font = Enum.Font.GothamBold
     CloseButton.Text = "X"
     CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    CloseButton.TextSize = 18
+    CloseButton.TextSize = 14
     CloseButton.Parent = TitleBar
 
     -- Mobile-compatible drag functionality
@@ -99,7 +99,7 @@ function Ozen:CreateWindow(name)
     TabBar.Name = "TabBar"
     TabBar.BackgroundTransparency = 1
     TabBar.Position = UDim2.new(0, 0, 0, 30)
-    TabBar.Size = UDim2.new(1, 0, 0, 40)
+    TabBar.Size = UDim2.new(1, 0, 0, 30)
     TabBar.ScrollBarThickness = 3
     TabBar.ScrollingDirection = Enum.ScrollingDirection.X
     TabBar.VerticalScrollBarPosition = Enum.VerticalScrollBarPosition.Left
@@ -109,13 +109,13 @@ function Ozen:CreateWindow(name)
     TabLayout.Parent = TabBar
     TabLayout.FillDirection = Enum.FillDirection.Horizontal
     TabLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    TabLayout.Padding = UDim.new(0, 8)
+    TabLayout.Padding = UDim.new(0, 5)
 
     -- Content Area
     local ContentArea = Instance.new("Frame")
     ContentArea.Name = "ContentArea"
     ContentArea.BackgroundTransparency = 1
-    ContentArea.Position = UDim2.new(0, 15, 0, 90)
+    ContentArea.Position = UDim2.new(0, 10, 0, 70)
     ContentArea.Size = UDim2.new(1, -20, 1, -80)
     ContentArea.Parent = MainFrame
 
@@ -149,11 +149,11 @@ function Ozen:CreateWindow(name)
         local TabButton = Instance.new("TextButton")
         TabButton.Name = tabName
         TabButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-        TabButton.Size = UDim2.new(0, textService:GetTextSize(tabName, 14, ...)
+        TabButton.Size = UDim2.new(0, textService:GetTextSize(tabName, 12, Enum.Font.Gotham, Vector2.new(0, 0)).X + 20, 0, 25)
         TabButton.Font = Enum.Font.Gotham
         TabButton.Text = tabName
         TabButton.TextColor3 = Color3.fromRGB(200, 200, 200)
-        TabButton.TextSize = 14
+        TabButton.TextSize = 12
         TabButton.Parent = TabBar
 
         -- Create Tab Content
@@ -170,7 +170,7 @@ function Ozen:CreateWindow(name)
         TabContentLayout.Parent = TabContent
         TabContentLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
         TabContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
-        TabContentLayout.Padding = UDim.new(0, 8)
+        TabContentLayout.Padding = UDim.new(0, 5)
 
         -- Set first tab as active
         if not currentTab then
@@ -221,7 +221,7 @@ function Tab:AddTextbox(config)
     InputBox.Text = config.Default or ""
     InputBox.TextColor3 = Color3.fromRGB(255, 255, 255)
     InputBox.TextSize = 12
-    InputBox.TextXAlignment = Enum.TextXAlignment.Left
+    InputBox.TextXAlignment = Enum.TextXAlignment.Center -- Changed from left to center
     InputBox.Parent = TextboxElement
 
     local Corner = Instance.new("UICorner")
@@ -246,7 +246,7 @@ function Tab:AddTextbox(config)
 end
 
 function Tab:AddToggle(config)
-    local ToggleElement = CreateElement("Toggle", 40)
+    local ToggleElement = CreateElement("Toggle", 30)
     ToggleElement.LayoutOrder = #TabContent:GetChildren()
     ToggleElement.Parent = TabContent
 
@@ -258,7 +258,7 @@ function Tab:AddToggle(config)
     ToggleTitle.Font = Enum.Font.Gotham
     ToggleTitle.Text = config.Text
     ToggleTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-    ToggleTitle.TextSize = 14
+    ToggleTitle.TextSize = 12
     ToggleTitle.TextXAlignment = Enum.TextXAlignment.Left
     ToggleTitle.Parent = ToggleElement
 
@@ -312,7 +312,7 @@ function Tab:AddToggle(config)
 end
 
         function Tab:AddButton(config)
-            local ButtonElement = CreateElement("Button", 40)
+            local ButtonElement = CreateElement("Button", 30)
             ButtonElement.LayoutOrder = #TabContent:GetChildren()
             ButtonElement.Parent = TabContent
 
@@ -323,7 +323,7 @@ end
             Button.Font = Enum.Font.Gotham
             Button.Text = config.Text
             Button.TextColor3 = Color3.fromRGB(255, 255, 255)
-            Button.TextSize = 14
+            Button.TextSize = 12
             Button.Parent = ButtonElement
 
             Button.MouseButton1Click:Connect(function()
@@ -351,7 +351,7 @@ end
         end
 
         function Tab:AddSlider(config)
-            local SliderElement = CreateElement("Slider", 50)
+            local SliderElement = CreateElement("Slider", 40)
             SliderElement.LayoutOrder = #TabContent:GetChildren()
             SliderElement.Parent = TabContent
 
@@ -363,7 +363,7 @@ end
             SliderTitle.Font = Enum.Font.Gotham
             SliderTitle.Text = config.Text
             SliderTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-            SliderTitle.TextSize = 14
+            SliderTitle.TextSize = 12
             SliderTitle.TextXAlignment = Enum.TextXAlignment.Left
             SliderTitle.Parent = SliderElement
 
@@ -383,7 +383,7 @@ end
             Track.Name = "Track"
             Track.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
             Track.Position = UDim2.new(0, 10, 0.5, 0)
-            Track.Size = UDim2.new(1, -20, 0, 6)
+            Track.Size = UDim2.new(1, -20, 0, 4)
             Track.Parent = SliderElement
 
             local Fill = Instance.new("Frame")
@@ -395,7 +395,7 @@ end
             local Thumb = Instance.new("Frame")
             Thumb.Name = "Thumb"
             Thumb.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-            Thumb.Size = UDim2.new(0, 16, 0, 16)
+            Thumb.Size = UDim2.new(0, 12, 0, 12)
             Thumb.Position = UDim2.new(0, -6, 0.5, -6)
             Thumb.Parent = Track
 
