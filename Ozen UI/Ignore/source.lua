@@ -455,7 +455,6 @@ function Tab:AddSlider(config)
     -- Set initial value
     updateValue(((currentValue - min) / (max - min)) * Track.AbsoluteSize.X)
 end
-
 function Tab:AddDropdown(config)
     local DropdownElement = CreateElement("Dropdown", 30)
     DropdownElement.ClipsDescendants = false
@@ -499,7 +498,7 @@ function Tab:AddDropdown(config)
     DropdownContainer.Size = UDim2.new(0, 140, 0, 0)
     DropdownContainer.Visible = false
     DropdownContainer.ZIndex = 100
-    DropdownContainer.Parent = ScreenGui  -- Parent to top-level ScreenGui
+    DropdownContainer.Parent = ScreenGui
 
     local DropdownList = Instance.new("ScrollingFrame")
     DropdownList.Name = "DropdownList"
@@ -523,7 +522,14 @@ function Tab:AddDropdown(config)
     -- Create dropdown state
     local dropdownOpen = false
     local positionConnection
+    local selectedOptions = {}
+    local isMultiple = config.multipleoptions or false
     
+    -- Set initial selection for single selection mode
+    if not isMultiple and config.Default then
+        SelectionButton.Text = config.Default
+    end
+
     local function updateListSize()
         local totalHeight = 0
         for _, child in ipairs(DropdownList:GetChildren()) do
@@ -588,11 +594,68 @@ function Tab:AddDropdown(config)
         OptionCorner.CornerRadius = UDim.new(0, 4)
         OptionCorner.Parent = OptionButton
 
+        -- Checkbox for multiple selection
+        local Checkbox
+        if isMultiple then
+            Checkbox = Instance.new("Frame")
+            Checkbox.Name = "Checkbox"
+            Checkbox.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+            Checkbox.Position = UDim2.new(0, 5, 0.5, -6)
+            Checkbox.Size = UDim2.new(0, 12, 0, 12)
+            Checkbox.ZIndex = 103
+            Checkbox.Parent = OptionButton
+            
+            local CheckboxCorner = Instance.new("UICorner")
+            CheckboxCorner.CornerRadius = UDim.new(0, 2)
+            CheckboxCorner.Parent = Checkbox
+            
+            OptionButton.TextXAlignment = Enum.TextXAlignment.Left
+            OptionButton.Text = "   " .. option
+        end
+
         OptionButton.MouseButton1Click:Connect(function()
-            SelectionButton.Text = option
-            toggleDropdown()
-            if config.Callback then
-                config.Callback(option)
+            if isMultiple then
+                -- Toggle selection state
+                selectedOptions[option] = not selectedOptions[option]
+                
+                -- Update checkbox
+                if selectedOptions[option] then
+                    Checkbox.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+                else
+                    Checkbox.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+                end
+                
+                -- Update selection button text
+                local count = 0
+                for _ in pairs(selectedOptions) do
+                    if selectedOptions[option] then
+                        count = count + 1
+                    end
+                end
+                
+                if count > 0 then
+                    SelectionButton.Text = count .. " selected"
+                else
+                    SelectionButton.Text = "Select"
+                end
+                
+                -- Fire callback with all selected options
+                if config.Callback then
+                    local selected = {}
+                    for opt, isSelected in pairs(selectedOptions) do
+                        if isSelected then
+                            table.insert(selected, opt)
+                        end
+                    end
+                    config.Callback(selected)
+                end
+            else
+                -- Single selection mode
+                SelectionButton.Text = option
+                toggleDropdown() -- Close dropdown after selection
+                if config.Callback then
+                    config.Callback(option)
+                end
             end
         end)
     end
