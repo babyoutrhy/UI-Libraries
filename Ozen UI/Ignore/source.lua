@@ -492,14 +492,24 @@ function Tab:AddDropdown(config)
     Corner.CornerRadius = UDim.new(0, 4)
     Corner.Parent = SelectionButton
 
-    -- Create dropdown container in ScreenGui
+    -- Create dropdown container relative to MainFrame
     local DropdownContainer = Instance.new("Frame")
     DropdownContainer.Name = "DropdownContainer"
     DropdownContainer.BackgroundTransparency = 1
     DropdownContainer.Size = UDim2.new(0, 140, 0, 0)
     DropdownContainer.Visible = false
     DropdownContainer.ZIndex = 100
-    DropdownContainer.Parent = ScreenGui
+    DropdownContainer.Parent = MainFrame  -- Attach to main window
+    
+    -- Position below selection button
+    local function updateDropdownPosition()
+        local buttonPos = SelectionButton.AbsolutePosition
+        local containerPos = MainFrame.AbsolutePosition
+        local relativeX = buttonPos.X - containerPos.X
+        local relativeY = buttonPos.Y - containerPos.Y + SelectionButton.AbsoluteSize.Y
+        
+        DropdownContainer.Position = UDim2.new(0, relativeX, 0, relativeY + 5)
+    end
 
     local DropdownList = Instance.new("ScrollingFrame")
     DropdownList.Name = "DropdownList"
@@ -520,9 +530,10 @@ function Tab:AddDropdown(config)
     ListLayout.SortOrder = Enum.SortOrder.LayoutOrder
     ListLayout.Padding = UDim.new(0, 2)
 
-    -- Create dropdown closure
+    -- Create dropdown state
     local dropdownOpen = false
-
+    local positionConnection
+    
     local function updateListSize()
         local totalHeight = 0
         for _, child in ipairs(DropdownList:GetChildren()) do
@@ -539,21 +550,29 @@ function Tab:AddDropdown(config)
             -- Close dropdown
             DropdownContainer.Visible = false
             dropdownOpen = false
+            
+            -- Disconnect position updater
+            if positionConnection then
+                positionConnection:Disconnect()
+                positionConnection = nil
+            end
         else
             -- Open dropdown
-            local buttonPos = SelectionButton.AbsolutePosition
-            DropdownContainer.Position = UDim2.new(0, buttonPos.X, 0, buttonPos.Y + SelectionButton.AbsoluteSize.Y + 5)
+            updateDropdownPosition()
             DropdownContainer.Visible = true
             dropdownOpen = true
+            
+            -- Update position continuously
+            positionConnection = RunService.Heartbeat:Connect(updateDropdownPosition)
         end
     end
 
-    -- Create option buttons (same size as selection button)
+    -- Create option buttons
     for i, option in ipairs(config.Options) do
         local OptionButton = Instance.new("TextButton")
         OptionButton.Name = option
         OptionButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-        OptionButton.Size = UDim2.new(1, -4, 0, 20) -- Same height, full width
+        OptionButton.Size = UDim2.new(1, -4, 0, 20)
         OptionButton.Position = UDim2.new(0, 2, 0, 0)
         OptionButton.Font = Enum.Font.Gotham
         OptionButton.Text = option
@@ -570,7 +589,7 @@ function Tab:AddDropdown(config)
 
         OptionButton.MouseButton1Click:Connect(function()
             SelectionButton.Text = option
-            toggleDropdown() -- Close when option is selected
+            toggleDropdown()
             if config.Callback then
                 config.Callback(option)
             end
@@ -584,6 +603,9 @@ function Tab:AddDropdown(config)
     
     -- Cleanup when element is destroyed
     DropdownElement.Destroying:Connect(function()
+        if positionConnection then
+            positionConnection:Disconnect()
+        end
         DropdownContainer:Destroy()
     end)
 end
