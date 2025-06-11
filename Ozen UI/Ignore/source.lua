@@ -457,7 +457,7 @@ function Tab:AddSlider(config)
 end
 
 function Tab:AddDropdown(config)
-    local DropdownElement = CreateElement("Dropdown", 30) -- Height matches other elements
+    local DropdownElement = CreateElement("Dropdown", 30)
     DropdownElement.ClipsDescendants = false
     DropdownElement.LayoutOrder = #TabContent:GetChildren()
     DropdownElement.Parent = TabContent
@@ -492,72 +492,100 @@ function Tab:AddDropdown(config)
     Corner.CornerRadius = UDim.new(0, 4)
     Corner.Parent = SelectionButton
 
-    -- Dropdown list container (positioned below button)
-    local DropdownList = Instance.new("Frame")
+    -- Create dropdown container in ScreenGui
+    local DropdownContainer = Instance.new("Frame")
+    DropdownContainer.Name = "DropdownContainer"
+    DropdownContainer.BackgroundTransparency = 1
+    DropdownContainer.Size = UDim2.new(0, 140, 0, 0)
+    DropdownContainer.Visible = false
+    DropdownContainer.ZIndex = 100
+    DropdownContainer.Parent = ScreenGui
+
+    local DropdownList = Instance.new("ScrollingFrame")
     DropdownList.Name = "DropdownList"
     DropdownList.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
     DropdownList.BorderSizePixel = 0
-    DropdownList.Position = UDim2.new(1, -150, 1, 5) -- Below the button
-    DropdownList.Size = UDim2.new(0, 140, 0, 0)
-    DropdownList.Visible = false
-    DropdownList.ZIndex = 100
-    DropdownList.Parent = ScreenGui -- Attach to top-level GUI
+    DropdownList.Size = UDim2.new(1, 0, 1, 0)
+    DropdownList.ScrollBarThickness = 5
+    DropdownList.CanvasSize = UDim2.new(0, 0, 0, 0)
+    DropdownList.ZIndex = 101
+    DropdownList.Parent = DropdownContainer
 
     local Corner2 = Instance.new("UICorner")
     Corner2.CornerRadius = UDim.new(0, 4)
     Corner2.Parent = DropdownList
 
-    -- Scrollable content
-    local ScrollFrame = Instance.new("ScrollingFrame")
-    ScrollFrame.Name = "ScrollFrame"
-    ScrollFrame.BackgroundTransparency = 1
-    ScrollFrame.Size = UDim2.new(1, 0, 1, 0)
-    ScrollFrame.ScrollBarThickness = 5
-    ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
-    ScrollFrame.Parent = DropdownList
-
     local ListLayout = Instance.new("UIListLayout")
-    ListLayout.Parent = ScrollFrame
+    ListLayout.Parent = DropdownList
     ListLayout.SortOrder = Enum.SortOrder.LayoutOrder
     ListLayout.Padding = UDim.new(0, 2)
 
+    -- Create dropdown closure
+    local dropdownOpen = false
+    local dropdownConnection
+    
     local function updateListSize()
         local totalHeight = 0
-        for _, child in ipairs(ScrollFrame:GetChildren()) do
+        for _, child in ipairs(DropdownList:GetChildren()) do
             if child:IsA("TextButton") then
                 totalHeight = totalHeight + child.AbsoluteSize.Y + ListLayout.Padding.Offset
             end
         end
-        ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, totalHeight)
-        DropdownList.Size = UDim2.new(0, 140, 0, math.min(100, totalHeight))
+        DropdownList.CanvasSize = UDim2.new(0, 0, 0, totalHeight)
+        DropdownContainer.Size = UDim2.new(0, 140, 0, math.min(100, totalHeight))
     end
 
     local function toggleDropdown()
-        if DropdownList.Visible then
-            DropdownList.Visible = false
+        if dropdownOpen then
+            -- Close dropdown
+            DropdownContainer.Visible = false
+            dropdownOpen = false
+            
+            if dropdownConnection then
+                dropdownConnection:Disconnect()
+                dropdownConnection = nil
+            end
         else
-            -- Position relative to selection button
+            -- Open dropdown
             local buttonPos = SelectionButton.AbsolutePosition
-            DropdownList.Position = UDim2.new(0, buttonPos.X, 0, buttonPos.Y + SelectionButton.AbsoluteSize.Y + 5)
-            DropdownList.Visible = true
+            DropdownContainer.Position = UDim2.new(0, buttonPos.X, 0, buttonPos.Y + SelectionButton.AbsoluteSize.Y + 5)
+            DropdownContainer.Visible = true
+            dropdownOpen = true
+            
+            -- Create outside click handler
+            dropdownConnection = UserInputService.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    local absPos = input.Position
+                    local listAbs = DropdownContainer.AbsolutePosition
+                    local listSize = DropdownContainer.AbsoluteSize
+                    
+                    -- Check if clicked outside dropdown
+                    if absPos.X < listAbs.X or 
+                       absPos.X > listAbs.X + listSize.X or 
+                       absPos.Y < listAbs.Y or 
+                       absPos.Y > listAbs.Y + listSize.Y then
+                        toggleDropdown()
+                    end
+                end
+            end)
         end
     end
 
-    -- Create option buttons
+    -- Create option buttons (same size as selection button)
     for i, option in ipairs(config.Options) do
         local OptionButton = Instance.new("TextButton")
         OptionButton.Name = option
         OptionButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-        OptionButton.Size = UDim2.new(1, -10, 0, 20)
-        OptionButton.Position = UDim2.new(0, 5, 0, 0)
+        OptionButton.Size = UDim2.new(1, -4, 0, 20) -- Same height, full width
+        OptionButton.Position = UDim2.new(0, 2, 0, 0)
         OptionButton.Font = Enum.Font.Gotham
         OptionButton.Text = option
         OptionButton.TextColor3 = Color3.fromRGB(255, 255, 255)
         OptionButton.TextSize = 12
-        OptionButton.ZIndex = 101
+        OptionButton.ZIndex = 102
         OptionButton.TextTruncate = Enum.TextTruncate.AtEnd
         OptionButton.LayoutOrder = i
-        OptionButton.Parent = ScrollFrame
+        OptionButton.Parent = DropdownList
 
         local OptionCorner = Instance.new("UICorner")
         OptionCorner.CornerRadius = UDim.new(0, 4)
@@ -577,28 +605,12 @@ function Tab:AddDropdown(config)
 
     SelectionButton.MouseButton1Click:Connect(toggleDropdown)
     
-    -- Close dropdown when clicking outside
-    local dropdownConnection
-    dropdownConnection = UserInputService.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 and DropdownList.Visible then
-            local absPos = input.Position
-            local listAbs = DropdownList.AbsolutePosition
-            local listSize = DropdownList.AbsoluteSize
-            
-            -- Check if clicked outside dropdown
-            if absPos.X < listAbs.X or 
-               absPos.X > listAbs.X + listSize.X or 
-               absPos.Y < listAbs.Y or 
-               absPos.Y > listAbs.Y + listSize.Y then
-                toggleDropdown()
-            end
-        end
-    end)
-    
     -- Cleanup when element is destroyed
     DropdownElement.Destroying:Connect(function()
-        dropdownConnection:Disconnect()
-        DropdownList:Destroy()
+        if dropdownConnection then
+            dropdownConnection:Disconnect()
+        end
+        DropdownContainer:Destroy()
     end)
 end
         
