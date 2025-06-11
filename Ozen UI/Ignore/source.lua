@@ -457,121 +457,78 @@ function Tab:AddSlider(config)
 end
 
 function Tab:AddDropdown(config)
-    local DropdownElement = CreateElement("Dropdown", 30)
+    local DropdownElement = CreateElement("Dropdown", 50)
+    DropdownElement.ClipsDescendants = true
     DropdownElement.LayoutOrder = #TabContent:GetChildren()
     DropdownElement.Parent = TabContent
-    DropdownElement.ZIndex = 10
 
     local DropdownTitle = Instance.new("TextLabel")
     DropdownTitle.Name = "Title"
     DropdownTitle.BackgroundTransparency = 1
     DropdownTitle.Position = UDim2.new(0, 10, 0, 0)
-    DropdownTitle.Size = UDim2.new(0, 200, 1, 0)
+    DropdownTitle.Size = UDim2.new(0, 200, 0, 20)
     DropdownTitle.Font = Enum.Font.Gotham
     DropdownTitle.Text = config.Text
     DropdownTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
     DropdownTitle.TextSize = 12
     DropdownTitle.TextXAlignment = Enum.TextXAlignment.Left
-    DropdownTitle.ZIndex = 11
     DropdownTitle.Parent = DropdownElement
 
     local SelectionButton = Instance.new("TextButton")
     SelectionButton.Name = "SelectionButton"
     SelectionButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    SelectionButton.Position = UDim2.new(1, -150, 0.5, -10)
-    SelectionButton.Size = UDim2.new(0, 140, 0, 20)
+    SelectionButton.Position = UDim2.new(0, 10, 0, 25)
+    SelectionButton.Size = UDim2.new(1, -20, 0, 20)
     SelectionButton.Font = Enum.Font.Gotham
     SelectionButton.Text = config.Default or "Select"
     SelectionButton.TextColor3 = Color3.fromRGB(255, 255, 255)
     SelectionButton.TextSize = 12
-    SelectionButton.ZIndex = 11
     SelectionButton.Parent = DropdownElement
 
     local Corner = Instance.new("UICorner")
     Corner.CornerRadius = UDim.new(0, 4)
     Corner.Parent = SelectionButton
 
-    -- Create dropdown list as a child of the ScreenGui
-    local DropdownList = Instance.new("Frame")
+    local DropdownList = Instance.new("ScrollingFrame")
     DropdownList.Name = "DropdownList"
     DropdownList.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
     DropdownList.BorderSizePixel = 0
-    DropdownList.Size = UDim2.new(0, 140, 0, 0)
+    DropdownList.Position = UDim2.new(0, 10, 0, 45)
+    DropdownList.Size = UDim2.new(1, -20, 0, 0)
     DropdownList.Visible = false
-    DropdownList.ZIndex = 100
-    DropdownList.Parent = ScreenGui
+    DropdownList.ScrollBarThickness = 5
+    DropdownList.CanvasSize = UDim2.new(0, 0, 0, 0)
+    DropdownList.ZIndex = 2
+    DropdownList.Parent = DropdownElement
+
+    local ListLayout = Instance.new("UIListLayout")
+    ListLayout.Parent = DropdownList
+    ListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    ListLayout.Padding = UDim.new(0, 2)
 
     local Corner2 = Instance.new("UICorner")
     Corner2.CornerRadius = UDim.new(0, 4)
     Corner2.Parent = DropdownList
 
-    local DropdownContent = Instance.new("ScrollingFrame")
-    DropdownContent.Name = "Content"
-    DropdownContent.BackgroundTransparency = 1
-    DropdownContent.Size = UDim2.new(1, 0, 1, 0)
-    DropdownContent.ScrollBarThickness = 5
-    DropdownContent.CanvasSize = UDim2.new(0, 0, 0, 0)
-    DropdownContent.ZIndex = 101
-    DropdownContent.Parent = DropdownList
-
-    local ListLayout = Instance.new("UIListLayout")
-    ListLayout.Parent = DropdownContent
-    ListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    ListLayout.Padding = UDim.new(0, 2)
-
-    -- Create a scrim to capture outside clicks
-    local DropdownScrim = Instance.new("Frame")
-    DropdownScrim.Name = "DropdownScrim"
-    DropdownScrim.BackgroundTransparency = 1
-    DropdownScrim.Size = UDim2.new(1, 0, 1, 0)
-    DropdownScrim.Visible = false
-    DropdownScrim.ZIndex = 99
-    DropdownScrim.Parent = ScreenGui
-
     local function updateListSize()
         local totalHeight = 0
-        for _, child in ipairs(DropdownContent:GetChildren()) do
+        for _, child in ipairs(DropdownList:GetChildren()) do
             if child:IsA("TextButton") then
                 totalHeight = totalHeight + child.AbsoluteSize.Y + ListLayout.Padding.Offset
             end
         end
-        
-        -- Limit height to 100px max with scrolling
-        local maxHeight = math.min(100, totalHeight)
-        DropdownContent.CanvasSize = UDim2.new(0, 0, 0, totalHeight)
-        DropdownList.Size = UDim2.new(0, 140, 0, maxHeight)
-    end
-
-    local function updateDropdownPosition()
-        if DropdownList.Visible then
-            -- Position dropdown below the selection button
-            local buttonPos = SelectionButton.AbsolutePosition
-            local buttonSize = SelectionButton.AbsoluteSize
-            
-            -- Get screen size for boundary checking
-            local screenSize = workspace.CurrentCamera.ViewportSize
-            
-            -- Calculate position with boundary checking
-            local posX = buttonPos.X
-            local posY = buttonPos.Y + buttonSize.Y + 2
-            
-            -- Ensure dropdown stays on screen
-            if posY + DropdownList.AbsoluteSize.Y > screenSize.Y then
-                posY = buttonPos.Y - DropdownList.AbsoluteSize.Y - 2
-            end
-            
-            DropdownList.Position = UDim2.new(0, posX, 0, posY)
-        end
+        DropdownList.CanvasSize = UDim2.new(0, 0, 0, totalHeight)
     end
 
     local function toggleDropdown()
         if DropdownList.Visible then
+            DropdownList:TweenSize(UDim2.new(1, -20, 0, 0), "Out", "Quad", 0.2, true)
+            wait(0.2)
             DropdownList.Visible = false
-            DropdownScrim.Visible = false
         else
-            updateDropdownPosition()
             DropdownList.Visible = true
-            DropdownScrim.Visible = true
+            DropdownList.Size = UDim2.new(1, -20, 0, 0)
+            DropdownList:TweenSize(UDim2.new(1, -20, 0, math.min(100, DropdownList.CanvasSize.Y.Offset)), "Out", "Quad", 0.2, true)
         end
     end
 
@@ -585,9 +542,9 @@ function Tab:AddDropdown(config)
         OptionButton.Text = option
         OptionButton.TextColor3 = Color3.fromRGB(255, 255, 255)
         OptionButton.TextSize = 12
+        OptionButton.ZIndex = 3
         OptionButton.LayoutOrder = i
-        OptionButton.ZIndex = 102
-        OptionButton.Parent = DropdownContent
+        OptionButton.Parent = DropdownList
 
         local OptionCorner = Instance.new("UICorner")
         OptionCorner.CornerRadius = UDim.new(0, 4)
@@ -602,50 +559,26 @@ function Tab:AddDropdown(config)
         end)
     end
 
-    ListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        updateListSize()
-    end)
+    ListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateListSize)
     updateListSize()
 
     SelectionButton.MouseButton1Click:Connect(toggleDropdown)
     
-    -- Close dropdown when clicking on scrim
-    DropdownScrim.MouseButton1Click:Connect(function()
-        if DropdownList.Visible then
-            toggleDropdown()
-        end
-    end)
-    
-    -- Continuously update position when visible
-    local positionUpdateConnection
-    DropdownList:GetPropertyChangedSignal("Visible"):Connect(function()
-        if DropdownList.Visible then
-            positionUpdateConnection = RunService.Heartbeat:Connect(updateDropdownPosition)
-        elseif positionUpdateConnection then
-            positionUpdateConnection:Disconnect()
-            positionUpdateConnection = nil
-        end
-    end)
-    
-    -- Close dropdown when tab content scrolls
-    TabContent:GetPropertyChangedSignal("CanvasPosition"):Connect(function()
-        if DropdownList.Visible then
-            toggleDropdown()
-        end
-    end)
-    
-    -- Close dropdown when window moves
-    MainFrame:GetPropertyChangedSignal("Position"):Connect(function()
-        if DropdownList.Visible then
-            toggleDropdown()
-        end
-    end)
-    
-    -- Clean up when GUI is closed
-    ScreenGui:GetPropertyChangedSignal("Parent"):Connect(function()
-        if not ScreenGui.Parent then
-            DropdownList:Destroy()
-            DropdownScrim:Destroy()
+    -- Close dropdown when clicking outside
+    game:GetService("UserInputService").InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            local absPos = input.Position
+            local elementAbs = DropdownElement.AbsolutePosition
+            local elementSize = DropdownElement.AbsoluteSize
+            
+            if absPos.X < elementAbs.X or 
+               absPos.X > elementAbs.X + elementSize.X or 
+               absPos.Y < elementAbs.Y or 
+               absPos.Y > elementAbs.Y + elementSize.Y then
+                if DropdownList.Visible then
+                    toggleDropdown()
+                end
+            end
         end
     end)
 end
