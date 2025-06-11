@@ -6,4 +6,4 @@
 
 🖤 Thank you for using Ozen UI, much love from rhy 🖤
 
-![image](https://github.com/user-attachments/assets/0b9e43da-c7be-42e6-914b-350c33bd01f9)
+![image](https://github.com/user-attachments/assets/d93f858e-26c1-42dc-b448-bd25d8aefff1)
