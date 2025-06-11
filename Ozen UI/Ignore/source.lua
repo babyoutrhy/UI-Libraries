@@ -609,7 +609,7 @@ function Tab:AddDropdown(config)
             CheckboxCorner.CornerRadius = UDim.new(0, 2)
             CheckboxCorner.Parent = Checkbox
             
-            OptionButton.TextXAlignment = Enum.TextXAlignment.Left
+            OptionButton.TextXAlignment = Enum.TextXAlignment.Center
             OptionButton.Text = "   " .. option
         end
 
