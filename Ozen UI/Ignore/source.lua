@@ -492,24 +492,14 @@ function Tab:AddDropdown(config)
     Corner.CornerRadius = UDim.new(0, 4)
     Corner.Parent = SelectionButton
 
-    -- Create dropdown container relative to MainFrame
+    -- Create dropdown container
     local DropdownContainer = Instance.new("Frame")
     DropdownContainer.Name = "DropdownContainer"
     DropdownContainer.BackgroundTransparency = 1
     DropdownContainer.Size = UDim2.new(0, 140, 0, 0)
     DropdownContainer.Visible = false
     DropdownContainer.ZIndex = 100
-    DropdownContainer.Parent = MainFrame  -- Attach to main window
-    
-    -- Position below selection button
-    local function updateDropdownPosition()
-        local buttonPos = SelectionButton.AbsolutePosition
-        local containerPos = MainFrame.AbsolutePosition
-        local relativeX = buttonPos.X - containerPos.X
-        local relativeY = buttonPos.Y - containerPos.Y + SelectionButton.AbsoluteSize.Y
-        
-        DropdownContainer.Position = UDim2.new(0, relativeX, 0, relativeY + 5)
-    end
+    DropdownContainer.Parent = ScreenGui  -- Parent to top-level ScreenGui
 
     local DropdownList = Instance.new("ScrollingFrame")
     DropdownList.Name = "DropdownList"
@@ -543,6 +533,17 @@ function Tab:AddDropdown(config)
         end
         DropdownList.CanvasSize = UDim2.new(0, 0, 0, totalHeight)
         DropdownContainer.Size = UDim2.new(0, 140, 0, math.min(100, totalHeight))
+    end
+
+    -- Update dropdown position to stick below button
+    local function updateDropdownPosition()
+        local buttonPos = SelectionButton.AbsolutePosition
+        DropdownContainer.Position = UDim2.new(
+            0, 
+            buttonPos.X, 
+            0, 
+            buttonPos.Y + SelectionButton.AbsoluteSize.Y + 5
+        )
     end
 
     local function toggleDropdown()
