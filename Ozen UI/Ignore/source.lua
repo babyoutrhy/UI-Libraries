@@ -458,7 +458,7 @@ end
 
 function Tab:AddDropdown(config)
     local DropdownElement = CreateElement("Dropdown", 50)
-    DropdownElement.ClipsDescendants = true
+    DropdownElement.ClipsDescendants = false -- Allow dropdown to extend beyond
     DropdownElement.LayoutOrder = #TabContent:GetChildren()
     DropdownElement.Parent = TabContent
 
@@ -477,8 +477,8 @@ function Tab:AddDropdown(config)
     local SelectionButton = Instance.new("TextButton")
     SelectionButton.Name = "SelectionButton"
     SelectionButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    SelectionButton.Position = UDim2.new(0, 10, 0, 25)
-    SelectionButton.Size = UDim2.new(1, -20, 0, 20)
+    SelectionButton.Position = UDim2.new(1, -150, 0.5, -10) -- Positioned at right
+    SelectionButton.Size = UDim2.new(0, 140, 0, 20) -- Smaller width
     SelectionButton.Font = Enum.Font.Gotham
     SelectionButton.Text = config.Default or "Select"
     SelectionButton.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -493,12 +493,12 @@ function Tab:AddDropdown(config)
     DropdownList.Name = "DropdownList"
     DropdownList.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
     DropdownList.BorderSizePixel = 0
-    DropdownList.Position = UDim2.new(0, 10, 0, 45)
-    DropdownList.Size = UDim2.new(1, -20, 0, 0)
+    DropdownList.Position = UDim2.new(0, 0, 1, 5) -- Position below the element
+    DropdownList.Size = UDim2.new(1, 0, 0, 0)
     DropdownList.Visible = false
     DropdownList.ScrollBarThickness = 5
     DropdownList.CanvasSize = UDim2.new(0, 0, 0, 0)
-    DropdownList.ZIndex = 2
+    DropdownList.ZIndex = 10 -- Higher than parent
     DropdownList.Parent = DropdownElement
 
     local ListLayout = Instance.new("UIListLayout")
@@ -522,18 +522,24 @@ function Tab:AddDropdown(config)
 
     local function toggleDropdown()
         if DropdownList.Visible then
-            DropdownList:TweenSize(UDim2.new(1, -20, 0, 0), "Out", "Quad", 0.2, true)
+            DropdownList:TweenSize(UDim2.new(1, 0, 0, 0), "Out", "Quad", 0.2, true)
             wait(0.2)
             DropdownList.Visible = false
         else
             DropdownList.Visible = true
-            DropdownList.Size = UDim2.new(1, -20, 0, 0)
-            DropdownList:TweenSize(UDim2.new(1, -20, 0, math.min(100, DropdownList.CanvasSize.Y.Offset)), "Out", "Quad", 0.2, true)
+            DropdownList.Size = UDim2.new(1, 0, 0, 0)
+            DropdownList:TweenSize(
+                UDim2.new(1, 0, 0, math.min(100, DropdownList.CanvasSize.Y.Offset)),
+                "Out", "Quad", 0.2, true
+            )
         end
     end
 
-    -- Create option buttons
+    -- Create option buttons with proper sizing
     for i, option in ipairs(config.Options) do
+        local textSize = textService:GetTextSize(option, 12, Enum.Font.Gotham, Vector2.new(1000, 20))
+        local buttonWidth = math.max(140, textSize.X + 20)
+        
         local OptionButton = Instance.new("TextButton")
         OptionButton.Name = option
         OptionButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
@@ -542,7 +548,8 @@ function Tab:AddDropdown(config)
         OptionButton.Text = option
         OptionButton.TextColor3 = Color3.fromRGB(255, 255, 255)
         OptionButton.TextSize = 12
-        OptionButton.ZIndex = 3
+        OptionButton.ZIndex = 11
+        OptionButton.TextTruncate = Enum.TextTruncate.AtEnd
         OptionButton.LayoutOrder = i
         OptionButton.Parent = DropdownList
 
@@ -564,8 +571,8 @@ function Tab:AddDropdown(config)
 
     SelectionButton.MouseButton1Click:Connect(toggleDropdown)
     
-    -- Close dropdown when clicking outside
-    game:GetService("UserInputService").InputBegan:Connect(function(input)
+    local dropdownConnection
+    dropdownConnection = game:GetService("UserInputService").InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             local absPos = input.Position
             local elementAbs = DropdownElement.AbsolutePosition
@@ -580,6 +587,10 @@ function Tab:AddDropdown(config)
                 end
             end
         end
+    end)
+    
+    DropdownElement.Destroying:Connect(function()
+        dropdownConnection:Disconnect()
     end)
 end
         
