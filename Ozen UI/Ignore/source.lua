@@ -523,7 +523,7 @@ function Tab:AddDropdown(config)
     local dropdownOpen = false
     local positionConnection
     local selectedOptions = {}
-    local isMultiple = config.multipleoptions or false
+    local isMultiple = config.MultipleOptions or false
     
     -- Set initial selection for single selection mode
     if not isMultiple and config.Default then
