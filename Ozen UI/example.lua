@@ -1,4 +1,4 @@
--- [[ Ozen UI ] --]
+-- [[ Ozen UI ] --
 
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/rhywme/UI-Libraries/main/Ozen%20UI/source.lua"))()
 local Window = Library:CreateWindow("Ozen UI")
