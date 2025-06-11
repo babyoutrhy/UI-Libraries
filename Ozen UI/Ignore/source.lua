@@ -522,8 +522,7 @@ function Tab:AddDropdown(config)
 
     -- Create dropdown closure
     local dropdownOpen = false
-    local dropdownConnection
-    
+
     local function updateListSize()
         local totalHeight = 0
         for _, child in ipairs(DropdownList:GetChildren()) do
@@ -540,34 +539,12 @@ function Tab:AddDropdown(config)
             -- Close dropdown
             DropdownContainer.Visible = false
             dropdownOpen = false
-            
-            if dropdownConnection then
-                dropdownConnection:Disconnect()
-                dropdownConnection = nil
-            end
         else
             -- Open dropdown
             local buttonPos = SelectionButton.AbsolutePosition
             DropdownContainer.Position = UDim2.new(0, buttonPos.X, 0, buttonPos.Y + SelectionButton.AbsoluteSize.Y + 5)
             DropdownContainer.Visible = true
             dropdownOpen = true
-            
-            -- Create outside click handler
-            dropdownConnection = UserInputService.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    local absPos = input.Position
-                    local listAbs = DropdownContainer.AbsolutePosition
-                    local listSize = DropdownContainer.AbsoluteSize
-                    
-                    -- Check if clicked outside dropdown
-                    if absPos.X < listAbs.X or 
-                       absPos.X > listAbs.X + listSize.X or 
-                       absPos.Y < listAbs.Y or 
-                       absPos.Y > listAbs.Y + listSize.Y then
-                        toggleDropdown()
-                    end
-                end
-            end)
         end
     end
 
@@ -593,7 +570,7 @@ function Tab:AddDropdown(config)
 
         OptionButton.MouseButton1Click:Connect(function()
             SelectionButton.Text = option
-            toggleDropdown()
+            toggleDropdown() -- Close when option is selected
             if config.Callback then
                 config.Callback(option)
             end
@@ -607,9 +584,6 @@ function Tab:AddDropdown(config)
     
     -- Cleanup when element is destroyed
     DropdownElement.Destroying:Connect(function()
-        if dropdownConnection then
-            dropdownConnection:Disconnect()
-        end
         DropdownContainer:Destroy()
     end)
 end
