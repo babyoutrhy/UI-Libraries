@@ -221,7 +221,7 @@ function Tab:AddTextbox(config)
     InputBox.Text = config.Default or ""
     InputBox.TextColor3 = Color3.fromRGB(255, 255, 255)
     InputBox.TextSize = 12
-    InputBox.TextXAlignment = Enum.TextXAlignment.Center -- From Left to Center
+    InputBox.TextXAlignment = Enum.TextXAlignment.Left
     InputBox.Parent = TextboxElement
 
     local Corner = Instance.new("UICorner")
@@ -311,151 +311,369 @@ function Tab:AddToggle(config)
     end)
 end
 
-        function Tab:AddButton(config)
-            local ButtonElement = CreateElement("Button", 30)
-            ButtonElement.LayoutOrder = #TabContent:GetChildren()
-            ButtonElement.Parent = TabContent
+function Tab:AddButton(config)
+    local ButtonElement = CreateElement("Button", 30)
+    ButtonElement.LayoutOrder = #TabContent:GetChildren()
+    ButtonElement.Parent = TabContent
 
-            local Button = Instance.new("TextButton")
-            Button.Name = "Action"
-            Button.BackgroundTransparency = 1
-            Button.Size = UDim2.new(1, 0, 1, 0)
-            Button.Font = Enum.Font.Gotham
-            Button.Text = config.Text
-            Button.TextColor3 = Color3.fromRGB(255, 255, 255)
-            Button.TextSize = 12
-            Button.Parent = ButtonElement
+    local Button = Instance.new("TextButton")
+    Button.Name = "Action"
+    Button.BackgroundTransparency = 1
+    Button.Size = UDim2.new(1, 0, 1, 0)
+    Button.Font = Enum.Font.Gotham
+    Button.Text = config.Text
+    Button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Button.TextSize = 12
+    Button.Parent = ButtonElement
 
-            Button.MouseButton1Click:Connect(function()
-                if config.Callback then
-                    config.Callback()
+    Button.MouseButton1Click:Connect(function()
+        if config.Callback then
+            config.Callback()
+        end
+    end)
+end
+
+function Tab:AddLabel(config)
+    local LabelElement = CreateElement("Label", 20)
+    LabelElement.LayoutOrder = #TabContent:GetChildren()
+    LabelElement.Parent = TabContent
+
+    local Label = Instance.new("TextLabel")
+    Label.Name = "Text"
+    Label.BackgroundTransparency = 1
+    Label.Size = UDim2.new(1, 0, 1, 0)
+    Label.Font = Enum.Font.Gotham
+    Label.Text = config.Text
+    Label.TextColor3 = Color3.fromRGB(200, 200, 200)
+    Label.TextSize = 12
+    Label.TextXAlignment = Enum.TextXAlignment.Left
+    Label.Parent = LabelElement
+end
+
+function Tab:AddSlider(config)
+    local SliderElement = CreateElement("Slider", 40)
+    SliderElement.LayoutOrder = #TabContent:GetChildren()
+    SliderElement.Parent = TabContent
+
+    local SliderTitle = Instance.new("TextLabel")
+    SliderTitle.Name = "Title"
+    SliderTitle.BackgroundTransparency = 1
+    SliderTitle.Position = UDim2.new(0, 10, 0, 0)
+    SliderTitle.Size = UDim2.new(0, 200, 0.5, 0)
+    SliderTitle.Font = Enum.Font.Gotham
+    SliderTitle.Text = config.Text
+    SliderTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+    SliderTitle.TextSize = 12
+    SliderTitle.TextXAlignment = Enum.TextXAlignment.Left
+    SliderTitle.Parent = SliderElement
+
+    local ValueDisplay = Instance.new("TextLabel")
+    ValueDisplay.Name = "Value"
+    ValueDisplay.BackgroundTransparency = 1
+    ValueDisplay.Position = UDim2.new(1, -60, 0, 0)
+    ValueDisplay.Size = UDim2.new(0, 50, 0.5, 0)
+    ValueDisplay.Font = Enum.Font.Gotham
+    ValueDisplay.Text = tostring(config.Default or config.Min)
+    ValueDisplay.TextColor3 = Color3.fromRGB(200, 200, 200)
+    ValueDisplay.TextSize = 12
+    ValueDisplay.TextXAlignment = Enum.TextXAlignment.Right
+    ValueDisplay.Parent = SliderElement
+
+    local Track = Instance.new("Frame")
+    Track.Name = "Track"
+    Track.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    Track.Position = UDim2.new(0, 10, 0.5, 0)
+    Track.Size = UDim2.new(1, -20, 0, 4)
+    Track.Parent = SliderElement
+
+    local Fill = Instance.new("Frame")
+    Fill.Name = "Fill"
+    Fill.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+    Fill.Size = UDim2.new(0, 0, 1, 0)
+    Fill.Parent = Track
+
+    local Thumb = Instance.new("Frame")
+    Thumb.Name = "Thumb"
+    Thumb.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    Thumb.Size = UDim2.new(0, 12, 0, 12)
+    Thumb.Position = UDim2.new(0, -6, 0.5, -6)
+    Thumb.Parent = Track
+
+    local Corner = Instance.new("UICorner")
+    Corner.CornerRadius = UDim.new(1, 0)
+    Corner.Parent = Thumb
+
+    local min = config.Min or 0
+    local max = config.Max or 100
+    local step = config.Step or 1
+    local currentValue = config.Default or min
+    local isDragging = false
+
+    local function updateValue(value)
+        currentValue = math.clamp(
+            math.floor((value / Track.AbsoluteSize.X) * (max - min) / step + 0.5) * step + min,
+            min,
+            max
+        )
+                
+        local fillWidth = ((currentValue - min) / (max - min)) * Track.AbsoluteSize.X
+        Fill.Size = UDim2.new(0, fillWidth, 1, 0)
+        Thumb.Position = UDim2.new(0, fillWidth - 6, 0.5, -6)
+        ValueDisplay.Text = tostring(currentValue)
+                
+        if config.Callback then
+            config.Callback(currentValue)
+        end
+    end
+
+    local function inputChanged(input)
+        if isDragging then
+            local mousePos = input.Position.X - Track.AbsolutePosition.X
+            updateValue(mousePos)
+        end
+    end
+
+    Track.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+             isDragging = true
+                updateValue(input.Position.X - Track.AbsolutePosition.X)
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            inputChanged(input)
                 end
             end)
+
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            isDragging = false
+        end
+    end)
+
+    -- Set initial value
+    updateValue(((currentValue - min) / (max - min)) * Track.AbsoluteSize.X)
+end
+function Tab:AddDropdown(config)
+    local DropdownElement = CreateElement("Dropdown", 30)
+    DropdownElement.ClipsDescendants = false
+    DropdownElement.LayoutOrder = #TabContent:GetChildren()
+    DropdownElement.Parent = TabContent
+
+    -- Title on left (centered vertically)
+    local DropdownTitle = Instance.new("TextLabel")
+    DropdownTitle.Name = "Title"
+    DropdownTitle.BackgroundTransparency = 1
+    DropdownTitle.Position = UDim2.new(0, 10, 0, 0)
+    DropdownTitle.Size = UDim2.new(0, 100, 1, 0)
+    DropdownTitle.Font = Enum.Font.Gotham
+    DropdownTitle.Text = config.Text
+    DropdownTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+    DropdownTitle.TextSize = 12
+    DropdownTitle.TextYAlignment = Enum.TextYAlignment.Center
+    DropdownTitle.TextXAlignment = Enum.TextXAlignment.Left
+    DropdownTitle.Parent = DropdownElement
+
+    -- Selection button on right
+    local SelectionButton = Instance.new("TextButton")
+    SelectionButton.Name = "SelectionButton"
+    SelectionButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    SelectionButton.Position = UDim2.new(1, -150, 0.5, -10)
+    SelectionButton.Size = UDim2.new(0, 140, 0, 20)
+    SelectionButton.Font = Enum.Font.Gotham
+    SelectionButton.Text = config.Default or "Select"
+    SelectionButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    SelectionButton.TextSize = 12
+    SelectionButton.Parent = DropdownElement
+
+    local Corner = Instance.new("UICorner")
+    Corner.CornerRadius = UDim.new(0, 4)
+    Corner.Parent = SelectionButton
+
+    -- Create dropdown container
+    local DropdownContainer = Instance.new("Frame")
+    DropdownContainer.Name = "DropdownContainer"
+    DropdownContainer.BackgroundTransparency = 1
+    DropdownContainer.Size = UDim2.new(0, 140, 0, 0)
+    DropdownContainer.Visible = false
+    DropdownContainer.ZIndex = 100
+    DropdownContainer.Parent = ScreenGui
+
+    local DropdownList = Instance.new("ScrollingFrame")
+    DropdownList.Name = "DropdownList"
+    DropdownList.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    DropdownList.BorderSizePixel = 0
+    DropdownList.Size = UDim2.new(1, 0, 1, 0)
+    DropdownList.ScrollBarThickness = 5
+    DropdownList.CanvasSize = UDim2.new(0, 0, 0, 0)
+    DropdownList.ZIndex = 101
+    DropdownList.Parent = DropdownContainer
+
+    local Corner2 = Instance.new("UICorner")
+    Corner2.CornerRadius = UDim.new(0, 4)
+    Corner2.Parent = DropdownList
+
+    local ListLayout = Instance.new("UIListLayout")
+    ListLayout.Parent = DropdownList
+    ListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    ListLayout.Padding = UDim.new(0, 2)
+
+    -- Create dropdown state
+    local dropdownOpen = false
+    local positionConnection
+    local selectedOptions = {}
+    local isMultiple = config.MultipleOptions or false
+    
+    -- Set initial selection for single selection mode
+    if not isMultiple and config.Default then
+        SelectionButton.Text = config.Default
+    end
+
+    local function updateListSize()
+        local totalHeight = 0
+        for _, child in ipairs(DropdownList:GetChildren()) do
+            if child:IsA("TextButton") then
+                totalHeight = totalHeight + child.AbsoluteSize.Y + ListLayout.Padding.Offset
+            end
+        end
+        DropdownList.CanvasSize = UDim2.new(0, 0, 0, totalHeight)
+        DropdownContainer.Size = UDim2.new(0, 140, 0, math.min(100, totalHeight))
+    end
+
+    -- Update dropdown position to stick below button
+    local function updateDropdownPosition()
+        local buttonPos = SelectionButton.AbsolutePosition
+        DropdownContainer.Position = UDim2.new(
+            0, 
+            buttonPos.X, 
+            0, 
+            buttonPos.Y + SelectionButton.AbsoluteSize.Y + 5
+        )
+    end
+
+    local function toggleDropdown()
+        if dropdownOpen then
+            -- Close dropdown
+            DropdownContainer.Visible = false
+            dropdownOpen = false
+            
+            -- Disconnect position updater
+            if positionConnection then
+                positionConnection:Disconnect()
+                positionConnection = nil
+            end
+        else
+            -- Open dropdown
+            updateDropdownPosition()
+            DropdownContainer.Visible = true
+            dropdownOpen = true
+            
+            -- Update position continuously
+            positionConnection = RunService.Heartbeat:Connect(updateDropdownPosition)
+        end
+    end
+
+    -- Create option buttons
+    for i, option in ipairs(config.Options) do
+        local OptionButton = Instance.new("TextButton")
+        OptionButton.Name = option
+        OptionButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+        OptionButton.Size = UDim2.new(1, -4, 0, 20)
+        OptionButton.Position = UDim2.new(0, 2, 0, 0)
+        OptionButton.Font = Enum.Font.Gotham
+        OptionButton.Text = option
+        OptionButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+        OptionButton.TextSize = 12
+        OptionButton.ZIndex = 102
+        OptionButton.TextTruncate = Enum.TextTruncate.AtEnd
+        OptionButton.LayoutOrder = i
+        OptionButton.Parent = DropdownList
+
+        local OptionCorner = Instance.new("UICorner")
+        OptionCorner.CornerRadius = UDim.new(0, 4)
+        OptionCorner.Parent = OptionButton
+
+        -- Checkbox for multiple selection
+        local Checkbox
+        if isMultiple then
+            Checkbox = Instance.new("Frame")
+            Checkbox.Name = "Checkbox"
+            Checkbox.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+            Checkbox.Position = UDim2.new(0, 5, 0.5, -6)
+            Checkbox.Size = UDim2.new(0, 12, 0, 12)
+            Checkbox.ZIndex = 103
+            Checkbox.Parent = OptionButton
+            
+            local CheckboxCorner = Instance.new("UICorner")
+            CheckboxCorner.CornerRadius = UDim.new(0, 2)
+            CheckboxCorner.Parent = Checkbox
+            
+            OptionButton.TextXAlignment = Enum.TextXAlignment.Center
+            OptionButton.Text = "   " .. option
         end
 
-        function Tab:AddLabel(config)
-            local LabelElement = CreateElement("Label", 20)
-            LabelElement.LayoutOrder = #TabContent:GetChildren()
-            LabelElement.Parent = TabContent
-
-            local Label = Instance.new("TextLabel")
-            Label.Name = "Text"
-            Label.BackgroundTransparency = 1
-            Label.Size = UDim2.new(1, 0, 1, 0)
-            Label.Font = Enum.Font.Gotham
-            Label.Text = config.Text
-            Label.TextColor3 = Color3.fromRGB(200, 200, 200)
-            Label.TextSize = 12
-            Label.TextXAlignment = Enum.TextXAlignment.Left
-            Label.Parent = LabelElement
-        end
-
-        function Tab:AddSlider(config)
-            local SliderElement = CreateElement("Slider", 40)
-            SliderElement.LayoutOrder = #TabContent:GetChildren()
-            SliderElement.Parent = TabContent
-
-            local SliderTitle = Instance.new("TextLabel")
-            SliderTitle.Name = "Title"
-            SliderTitle.BackgroundTransparency = 1
-            SliderTitle.Position = UDim2.new(0, 10, 0, 0)
-            SliderTitle.Size = UDim2.new(0, 200, 0.5, 0)
-            SliderTitle.Font = Enum.Font.Gotham
-            SliderTitle.Text = config.Text
-            SliderTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-            SliderTitle.TextSize = 12
-            SliderTitle.TextXAlignment = Enum.TextXAlignment.Left
-            SliderTitle.Parent = SliderElement
-
-            local ValueDisplay = Instance.new("TextLabel")
-            ValueDisplay.Name = "Value"
-            ValueDisplay.BackgroundTransparency = 1
-            ValueDisplay.Position = UDim2.new(1, -60, 0, 0)
-            ValueDisplay.Size = UDim2.new(0, 50, 0.5, 0)
-            ValueDisplay.Font = Enum.Font.Gotham
-            ValueDisplay.Text = tostring(config.Default or config.Min)
-            ValueDisplay.TextColor3 = Color3.fromRGB(200, 200, 200)
-            ValueDisplay.TextSize = 12
-            ValueDisplay.TextXAlignment = Enum.TextXAlignment.Right
-            ValueDisplay.Parent = SliderElement
-
-            local Track = Instance.new("Frame")
-            Track.Name = "Track"
-            Track.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-            Track.Position = UDim2.new(0, 10, 0.5, 0)
-            Track.Size = UDim2.new(1, -20, 0, 4)
-            Track.Parent = SliderElement
-
-            local Fill = Instance.new("Frame")
-            Fill.Name = "Fill"
-            Fill.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
-            Fill.Size = UDim2.new(0, 0, 1, 0)
-            Fill.Parent = Track
-
-            local Thumb = Instance.new("Frame")
-            Thumb.Name = "Thumb"
-            Thumb.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-            Thumb.Size = UDim2.new(0, 12, 0, 12)
-            Thumb.Position = UDim2.new(0, -6, 0.5, -6)
-            Thumb.Parent = Track
-
-            local Corner = Instance.new("UICorner")
-            Corner.CornerRadius = UDim.new(1, 0)
-            Corner.Parent = Thumb
-
-            local min = config.Min or 0
-            local max = config.Max or 100
-            local step = config.Step or 1
-            local currentValue = config.Default or min
-            local isDragging = false
-
-            local function updateValue(value)
-                currentValue = math.clamp(
-                    math.floor((value / Track.AbsoluteSize.X) * (max - min) / step + 0.5) * step + min,
-                    min,
-                    max
-                )
+        OptionButton.MouseButton1Click:Connect(function()
+            if isMultiple then
+                -- Toggle selection state
+                selectedOptions[option] = not selectedOptions[option]
                 
-                local fillWidth = ((currentValue - min) / (max - min)) * Track.AbsoluteSize.X
-                Fill.Size = UDim2.new(0, fillWidth, 1, 0)
-                Thumb.Position = UDim2.new(0, fillWidth - 6, 0.5, -6)
-                ValueDisplay.Text = tostring(currentValue)
+                -- Update checkbox
+                if selectedOptions[option] then
+                    Checkbox.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+                else
+                    Checkbox.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+                end
                 
+                -- Update selection button text
+                local count = 0
+                for _ in pairs(selectedOptions) do
+                    if selectedOptions[option] then
+                        count = count + 1
+                    end
+                end
+                
+                if count > 0 then
+                    SelectionButton.Text = count .. " selected"
+                else
+                    SelectionButton.Text = "Select"
+                end
+                
+                -- Fire callback with all selected options
                 if config.Callback then
-                    config.Callback(currentValue)
+                    local selected = {}
+                    for opt, isSelected in pairs(selectedOptions) do
+                        if isSelected then
+                            table.insert(selected, opt)
+                        end
+                    end
+                    config.Callback(selected)
+                end
+            else
+                -- Single selection mode
+                SelectionButton.Text = option
+                toggleDropdown() -- Close dropdown after selection
+                if config.Callback then
+                    config.Callback(option)
                 end
             end
+        end)
+    end
 
-            local function inputChanged(input)
-                if isDragging then
-                    local mousePos = input.Position.X - Track.AbsolutePosition.X
-                    updateValue(mousePos)
-                end
-            end
+    ListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateListSize)
+    updateListSize()
 
-            Track.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                    isDragging = true
-                    updateValue(input.Position.X - Track.AbsolutePosition.X)
-                end
-            end)
-
-            UserInputService.InputChanged:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-                    inputChanged(input)
-                end
-            end)
-
-            UserInputService.InputEnded:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                    isDragging = false
-                end
-            end)
-
-            -- Set initial value
-            updateValue(((currentValue - min) / (max - min)) * Track.AbsoluteSize.X)
+    SelectionButton.MouseButton1Click:Connect(toggleDropdown)
+    
+    -- Cleanup when element is destroyed
+    DropdownElement.Destroying:Connect(function()
+        if positionConnection then
+            positionConnection:Disconnect()
         end
-
+        DropdownContainer:Destroy()
+    end)
+end
+        
         return Tab
     end
 
