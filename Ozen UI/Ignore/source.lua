@@ -627,8 +627,8 @@ function Tab:AddDropdown(config)
                 
                 -- Update selection button text
                 local count = 0
-                for _ in pairs(selectedOptions) do
-                    if selectedOptions[option] then
+                for _, isSelected in pairs(selectedOptions) do
+                    if isSelected then
                         count = count + 1
                     end
                 end
