@@ -1,0 +1,284 @@
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+
+local Neutron = {}
+Neutron.__index = Neutron
+
+function Neutron.new(title)
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "NeutronUI"
+    screenGui.Parent = game:GetService("CoreGui")
+    screenGui.ResetOnSpawn = false
+
+    local mainFrame = Instance.new("Frame")
+    mainFrame.Name = "MainFrame"
+    mainFrame.Size = UDim2.new(0, 300, 0, 300)
+    mainFrame.Position = UDim2.new(0.5, -150, 0.5, -150)
+    mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+    mainFrame.BorderSizePixel = 0
+    mainFrame.Parent = screenGui
+
+    local dragFrame = Instance.new("Frame")
+    dragFrame.Name = "DragFrame"
+    dragFrame.Size = UDim2.new(1, 0, 0, 30)
+    dragFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+    dragFrame.BorderSizePixel = 0
+    dragFrame.Parent = mainFrame
+
+    local titleLabel = Instance.new("TextLabel")
+    titleLabel.Name = "Title"
+    titleLabel.Size = UDim2.new(1, -10, 1, 0)
+    titleLabel.Position = UDim2.new(0, 10, 0, 0)
+    titleLabel.BackgroundTransparency = 1
+    titleLabel.Text = title or "Neutron"
+    titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    titleLabel.Font = Enum.Font.GothamBold
+    titleLabel.TextSize = 14
+    titleLabel.Parent = dragFrame
+
+    local closeButton = Instance.new("TextButton")
+    closeButton.Name = "CloseButton"
+    closeButton.Size = UDim2.new(0, 30, 0, 30)
+    closeButton.Position = UDim2.new(1, -30, 0, 0)
+    closeButton.BackgroundTransparency = 1
+    closeButton.Text = "X"
+    closeButton.TextColor3 = Color3.fromRGB(255, 100, 100)
+    closeButton.Font = Enum.Font.GothamBold
+    closeButton.TextSize = 14
+    closeButton.Parent = dragFrame
+
+    local tabContainer = Instance.new("Frame")
+    tabContainer.Name = "TabContainer"
+    tabContainer.Size = UDim2.new(1, -20, 0, 30)
+    tabContainer.Position = UDim2.new(0, 10, 0, 35)
+    tabContainer.BackgroundTransparency = 1
+    tabContainer.Parent = mainFrame
+
+    local tabListLayout = Instance.new("UIListLayout")
+    tabListLayout.Name = "TabListLayout"
+    tabListLayout.FillDirection = Enum.FillDirection.Horizontal
+    tabListLayout.Padding = UDim.new(0, 5)
+    tabListLayout.Parent = tabContainer
+
+    local contentContainer = Instance.new("Frame")
+    contentContainer.Name = "ContentContainer"
+    contentContainer.Size = UDim2.new(1, -20, 1, -70)
+    contentContainer.Position = UDim2.new(0, 10, 0, 70)
+    contentContainer.BackgroundTransparency = 1
+    contentContainer.Parent = mainFrame
+
+    local contentScroller = Instance.new("ScrollingFrame")
+    contentScroller.Name = "ContentScroller"
+    contentScroller.Size = UDim2.new(1, 0, 1, 0)
+    contentScroller.BackgroundTransparency = 1
+    contentScroller.BorderSizePixel = 0
+    contentScroller.ScrollBarThickness = 5
+    contentScroller.Parent = contentContainer
+
+    local contentLayout = Instance.new("UIListLayout")
+    contentLayout.Name = "ContentLayout"
+    contentLayout.Padding = UDim.new(0, 5)
+    contentLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    contentLayout.Parent = contentScroller
+
+    local self = setmetatable({
+        ScreenGui = screenGui,
+        MainFrame = mainFrame,
+        DragFrame = dragFrame,
+        TabContainer = tabContainer,
+        ContentContainer = contentScroller,
+        Tabs = {},
+        ActiveTab = nil
+    }, Neutron)
+
+    closeButton.MouseButton1Click:Connect(function()
+        screenGui:Destroy()
+    end)
+
+    local dragging = false
+    local dragStart, frameStart
+
+    local function updateInput(input)
+        if dragging then
+            local delta = input.Position - dragStart
+            mainFrame.Position = UDim2.new(
+                frameStart.X.Scale, 
+                frameStart.X.Offset + delta.X, 
+                frameStart.Y.Scale, 
+                frameStart.Y.Offset + delta.Y
+            )
+        end
+    end
+
+    dragFrame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            frameStart = mainFrame.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+
+    dragFrame.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            updateInput(input)
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            updateInput(input)
+        end
+    end)
+
+    return self
+end
+
+function Neutron:AddTab(name)
+    local tabButton = Instance.new("TextButton")
+    tabButton.Name = name.."TabButton"
+    tabButton.Size = UDim2.new(0, 70, 0, 25)
+    tabButton.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+    tabButton.BorderSizePixel = 0
+    tabButton.Text = name
+    tabButton.TextColor3 = Color3.fromRGB(200, 200, 200)
+    tabButton.Font = Enum.Font.Gotham
+    tabButton.TextSize = 12
+    tabButton.Parent = self.TabContainer
+
+    local tabContent = Instance.new("Frame")
+    tabContent.Name = name.."TabContent"
+    tabContent.Size = UDim2.new(1, 0, 1, 0)
+    tabContent.BackgroundTransparency = 1
+    tabContent.Visible = false
+    tabContent.Parent = self.ContentContainer
+
+    local tabLayout = Instance.new("UIListLayout")
+    tabLayout.Name = "TabLayout"
+    tabLayout.Padding = UDim.new(0, 5)
+    tabLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    tabLayout.Parent = tabContent
+
+    local tab = {
+        Name = name,
+        Button = tabButton,
+        Content = tabContent,
+        Elements = {}
+    }
+
+    table.insert(self.Tabs, tab)
+
+    tabButton.MouseButton1Click:Connect(function()
+        self:SwitchTab(name)
+    end)
+
+    if #self.Tabs == 1 then
+        self:SwitchTab(name)
+    end
+
+    return tab
+end
+
+function Neutron:SwitchTab(tabName)
+    for _, tab in ipairs(self.Tabs) do
+        tab.Content.Visible = (tab.Name == tabName)
+        tab.Button.BackgroundColor3 = (tab.Name == tabName) and Color3.fromRGB(80, 120, 200) or Color3.fromRGB(40, 40, 50)
+    end
+    self.ActiveTab = tabName
+end
+
+function Neutron:CreateButton(parent, text, callback)
+    local button = Instance.new("TextButton")
+    button.Name = text.."Button"
+    button.Size = UDim2.new(1, -10, 0, 30)
+    button.Position = UDim2.new(0, 5, 0, 0)
+    button.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
+    button.BorderSizePixel = 0
+    button.Text = text
+    button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    button.Font = Enum.Font.Gotham
+    button.TextSize = 12
+    button.Parent = parent.Content
+    button.LayoutOrder = #parent.Elements + 1
+
+    button.MouseButton1Click:Connect(callback)
+
+    table.insert(parent.Elements, button)
+    return button
+end
+
+function Neutron:CreateToggle(parent, text, default, callback)
+    local toggleFrame = Instance.new("Frame")
+    toggleFrame.Name = text.."Toggle"
+    toggleFrame.Size = UDim2.new(1, -10, 0, 30)
+    toggleFrame.BackgroundTransparency = 1
+    toggleFrame.LayoutOrder = #parent.Elements + 1
+    toggleFrame.Parent = parent.Content
+
+    local toggleButton = Instance.new("TextButton")
+    toggleButton.Name = "ToggleButton"
+    toggleButton.Size = UDim2.new(0, 50, 0, 25)
+    toggleButton.Position = UDim2.new(1, -55, 0.5, -12)
+    toggleButton.BackgroundColor3 = default and Color3.fromRGB(80, 180, 80) or Color3.fromRGB(180, 80, 80)
+    toggleButton.BorderSizePixel = 0
+    toggleButton.Text = default and "ON" or "OFF"
+    toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    toggleButton.Font = Enum.Font.GothamBold
+    toggleButton.TextSize = 12
+    toggleButton.Parent = toggleFrame
+
+    local toggleLabel = Instance.new("TextLabel")
+    toggleLabel.Name = "ToggleLabel"
+    toggleLabel.Size = UDim2.new(1, -60, 1, 0)
+    toggleLabel.BackgroundTransparency = 1
+    toggleLabel.Text = text
+    toggleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    toggleLabel.Font = Enum.Font.Gotham
+    toggleLabel.TextSize = 12
+    toggleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    toggleLabel.Parent = toggleFrame
+
+    local state = default
+    local function updateToggle()
+        state = not state
+        toggleButton.Text = state and "ON" or "OFF"
+        toggleButton.BackgroundColor3 = state and Color3.fromRGB(80, 180, 80) or Color3.fromRGB(180, 80, 80)
+        callback(state)
+    end
+
+    toggleButton.MouseButton1Click:Connect(updateToggle)
+    table.insert(parent.Elements, toggleFrame)
+    
+    return {
+        Frame = toggleFrame,
+        Button = toggleButton,
+        SetState = function(_, value)
+            if state ~= value then
+                updateToggle()
+            end
+        end
+    }
+end
+
+function Neutron:Button(tabName, text, callback)
+    for _, tab in ipairs(self.Tabs) do
+        if tab.Name == tabName then
+            return self:CreateButton(tab, text, callback)
+        end
+    end
+    error("Tab not found: "..tabName)
+end
+
+function Neutron:Toggle(tabName, text, default, callback)
+    for _, tab in ipairs(self.Tabs) do
+        if tab.Name == tabName then
+            return self:CreateToggle(tab, text, default, callback)
+        end
+    end
+    error("Tab not found: "..tabName)
+end
