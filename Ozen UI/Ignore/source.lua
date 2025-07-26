@@ -674,6 +674,31 @@ function Tab:AddDropdown(config)
     end)
 end
         
+-- Label updater
+function Tab:AddLabelUpdater(config)
+    local LabelUpdaterElement = CreateElement("LabelUpdater", 20)
+    LabelUpdaterElement.LayoutOrder = #TabContent:GetChildren()
+    LabelUpdaterElement.Parent = TabContent
+
+    local Label = Instance.new("TextLabel")
+    Label.Name = "Text"
+    Label.BackgroundTransparency = 1
+    Label.Size = UDim2.new(1, 0, 1, 0)
+    Label.Font = Enum.Font.Gotham
+    Label.Text = config.Text or ""
+    Label.TextColor3 = Color3.fromRGB(200, 200, 200)
+    Label.TextSize = 12
+    Label.TextXAlignment = Enum.TextXAlignment.Left
+    Label.Parent = LabelUpdaterElement
+
+    -- Return update function
+    return {
+        Update = function(newText)
+            Label.Text = newText
+        end
+    }
+        end
+        
         return Tab
     end
 
