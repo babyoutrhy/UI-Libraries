@@ -52,7 +52,7 @@ function Ozen:CreateWindow(name)
     CloseButton.TextSize = 14
     CloseButton.Parent = TitleBar
 
-    -- Mobile-compatible drag functionality
+ -- Mobile-compatible drag functionality - MODIFIED TO ONLY WORK ON TITLE BAR
     local dragStartPos
     local startPos
     local isDragging = false
@@ -91,9 +91,9 @@ function Ozen:CreateWindow(name)
         end
     end)
 
-    MainFrame.InputBegan:Connect(onInputBegan)
+    -- ONLY ENABLE DRAGGING ON TITLE BAR (REMOVED MAINFRAME INPUT)
     TitleBar.InputBegan:Connect(onInputBegan)
-
+    
     -- Tab System with Scrolling
     local TabBar = Instance.new("ScrollingFrame")
     TabBar.Name = "TabBar"
