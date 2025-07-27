@@ -355,6 +355,9 @@ function Tab:AddSlider(config)
     SliderElement.LayoutOrder = #TabContent:GetChildren()
     SliderElement.Parent = TabContent
 
+    -- Reference to parent scrolling frame
+    local scrollingFrame = TabContent
+
     local SliderTitle = Instance.new("TextLabel")
     SliderTitle.Name = "Title"
     SliderTitle.BackgroundTransparency = 1
@@ -428,6 +431,7 @@ function Tab:AddSlider(config)
 
     local function inputChanged(input)
         if isDragging then
+            input:PreventDefault() -- Prevent scrolling while dragging
             local mousePos = input.Position.X - Track.AbsolutePosition.X
             updateValue(mousePos)
         end
@@ -435,26 +439,51 @@ function Tab:AddSlider(config)
 
     Track.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-             isDragging = true
-                updateValue(input.Position.X - Track.AbsolutePosition.X)
+            isDragging = true
+            
+            -- Disable scrolling in parent frame
+            local dragCount = scrollingFrame:GetAttribute("SliderDragCount") or 0
+            scrollingFrame:SetAttribute("SliderDragCount", dragCount + 1)
+            scrollingFrame.ScrollingEnabled = false
         end
     end)
 
     UserInputService.InputChanged:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
             inputChanged(input)
-                end
-            end)
-
-    UserInputService.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            isDragging = false
         end
     end)
 
+    local function endDrag()
+        if isDragging then
+            isDragging = false
+            
+            -- Re-enable scrolling if no other sliders are dragging
+            if scrollingFrame and scrollingFrame:IsDescendantOf(game) then
+                local dragCount = scrollingFrame:GetAttribute("SliderDragCount") or 1
+                dragCount = dragCount - 1
+                scrollingFrame:SetAttribute("SliderDragCount", dragCount)
+                
+                if dragCount <= 0 then
+                    scrollingFrame.ScrollingEnabled = true
+                end
+            end
+        end
+    end
+
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            endDrag()
+        end
+    end)
+
+    -- Cleanup if slider is destroyed mid-drag
+    SliderElement.Destroying:Connect(endDrag)
+
     -- Set initial value
     updateValue(((currentValue - min) / (max - min)) * Track.AbsoluteSize.X)
-end
+        end
+
 function Tab:AddDropdown(config)
     local DropdownElement = CreateElement("Dropdown", 30)
     DropdownElement.ClipsDescendants = false
@@ -673,31 +702,6 @@ function Tab:AddDropdown(config)
         DropdownContainer:Destroy()
     end)
 end
-        
--- Label updater
-function Tab:AddLabelUpdater(config)
-    local LabelUpdaterElement = CreateElement("LabelUpdater", 20)
-    LabelUpdaterElement.LayoutOrder = #TabContent:GetChildren()
-    LabelUpdaterElement.Parent = TabContent
-
-    local Label = Instance.new("TextLabel")
-    Label.Name = "Text"
-    Label.BackgroundTransparency = 1
-    Label.Size = UDim2.new(1, 0, 1, 0)
-    Label.Font = Enum.Font.Gotham
-    Label.Text = config.Text or ""
-    Label.TextColor3 = Color3.fromRGB(200, 200, 200)
-    Label.TextSize = 12
-    Label.TextXAlignment = Enum.TextXAlignment.Left
-    Label.Parent = LabelUpdaterElement
-
-    -- Return update function
-    return {
-        Update = function(newText)
-            Label.Text = newText
-        end
-    }
-        end
         
         return Tab
     end
