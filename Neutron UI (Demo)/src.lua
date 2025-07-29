@@ -13,6 +13,48 @@ local THEME = {
     Border = Color3.fromRGB(60, 60, 70)
 }
 
+-- Tab metatable
+local Tab = {}
+Tab.__index = Tab
+
+function Tab:AddButton(text, callback)
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(1, -20, 0, 35)
+    button.Text = text
+    button.Font = Enum.Font.Gotham
+    button.TextSize = 14
+    button.TextColor3 = THEME.Text
+    button.BackgroundColor3 = THEME.Accent
+    button.AutoButtonColor = false
+    button.Parent = self.Content
+    
+    button.MouseEnter:Connect(function()
+        button.BackgroundColor3 = THEME.Accent:lerp(Color3.new(1, 1, 1), 0.2)
+    end)
+    
+    button.MouseLeave:Connect(function()
+        button.BackgroundColor3 = THEME.Accent
+    end)
+    
+    button.MouseButton1Click:Connect(callback)
+    
+    table.insert(self.Buttons, button)
+    return button
+end
+
+function Tab:AddLabel(text)
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, -20, 0, 20)
+    label.Text = text
+    label.Font = Enum.Font.Gotham
+    label.TextSize = 14
+    label.TextColor3 = THEME.Text
+    label.BackgroundTransparency = 1
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Parent = self.Content
+    return label
+end
+
 function Neutron:CreateWindow(title)
     local self = setmetatable({}, Neutron)
     self.Tabs = {}
@@ -90,15 +132,15 @@ function Neutron:CreateSeparator(positionY)
 end
 
 function Neutron:AddTab(name, iconName)
-    local tab = {}
-    tab.Name = name
-    tab.Icon = iconName
-    tab.Buttons = {}
+    local tab = setmetatable({
+        Name = name,
+        Icon = iconName,
+        Buttons = {}
+    }, Tab)
     
     -- Create tab button
     local tabButton = Instance.new("TextButton")
     tabButton.Size = UDim2.new(1, -10, 0, 35)
-    tabButton.Position = UDim2.new(0, 5, 0, #self.Tabs * 40)
     tabButton.BackgroundColor3 = THEME.Secondary
     tabButton.AutoButtonColor = false
     tabButton.Text = ""
@@ -154,45 +196,6 @@ function Neutron:SelectTab(selectedTab)
     for _, tab in ipairs(self.Tabs) do
         tab.Content.Visible = (tab == selectedTab)
     end
-end
-
--- UI Elements
-function Neutron.Tab:AddButton(text, callback)
-    local button = Instance.new("TextButton")
-    button.Size = UDim2.new(1, -20, 0, 35)
-    button.Text = text
-    button.Font = Enum.Font.Gotham
-    button.TextSize = 14
-    button.TextColor3 = THEME.Text
-    button.BackgroundColor3 = THEME.Accent
-    button.AutoButtonColor = false
-    button.Parent = self.Content
-    
-    button.MouseEnter:Connect(function()
-        button.BackgroundColor3 = THEME.Accent:lerp(Color3.new(1, 1, 1), 0.2)
-    end)
-    
-    button.MouseLeave:Connect(function()
-        button.BackgroundColor3 = THEME.Accent
-    end)
-    
-    button.MouseButton1Click:Connect(callback)
-    
-    table.insert(self.Buttons, button)
-    return button
-end
-
-function Neutron.Tab:AddLabel(text)
-    local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(1, -20, 0, 20)
-    label.Text = text
-    label.Font = Enum.Font.Gotham
-    label.TextSize = 14
-    label.TextColor3 = THEME.Text
-    label.BackgroundTransparency = 1
-    label.TextXAlignment = Enum.TextXAlignment.Left
-    label.Parent = self.Content
-    return label
 end
 
 -- Initialize library
