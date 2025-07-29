@@ -351,7 +351,6 @@ function Tab:AddLabel(config)
 end
 
 function Tab:AddSlider(config)
-function Tab:AddSlider(config)
     local SliderElement = CreateElement("Slider", 40)
     SliderElement.LayoutOrder = #TabContent:GetChildren()
     SliderElement.Parent = TabContent
