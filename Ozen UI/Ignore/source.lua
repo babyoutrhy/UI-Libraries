@@ -351,6 +351,7 @@ function Tab:AddLabel(config)
 end
 
 function Tab:AddSlider(config)
+function Tab:AddSlider(config)
     local SliderElement = CreateElement("Slider", 40)
     SliderElement.LayoutOrder = #TabContent:GetChildren()
     SliderElement.Parent = TabContent
@@ -437,7 +438,7 @@ function Tab:AddSlider(config)
         end
     end
 
-    Track.InputBegan:Connect(function(input)
+    local function beginDrag(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             isDragging = true
             
@@ -445,8 +446,16 @@ function Tab:AddSlider(config)
             local dragCount = scrollingFrame:GetAttribute("SliderDragCount") or 0
             scrollingFrame:SetAttribute("SliderDragCount", dragCount + 1)
             scrollingFrame.ScrollingEnabled = false
+            
+            -- Update the value immediately
+            local mousePos = input.Position.X - Track.AbsolutePosition.X
+            updateValue(mousePos)
         end
-    end)
+    end
+
+    -- Make both track and thumb draggable
+    Track.InputBegan:Connect(beginDrag)
+    Thumb.InputBegan:Connect(beginDrag)
 
     UserInputService.InputChanged:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
@@ -482,7 +491,7 @@ function Tab:AddSlider(config)
 
     -- Set initial value
     updateValue(((currentValue - min) / (max - min)) * Track.AbsoluteSize.X)
-        end
+end
 
 function Tab:AddDropdown(config)
     local DropdownElement = CreateElement("Dropdown", 30)
