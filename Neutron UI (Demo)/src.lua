@@ -1,8 +1,7 @@
 local Neutron = {}
 Neutron.__index = Neutron
 
--- Bootstrap Icons CDN (replacing the images from SVG to png because Roblox doesn't support it, grr..)
-
+-- Bootstrap Icons CDN
 local ICON_CDN = "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/icons/%s.png"
 
 -- Theme Configuration
@@ -23,19 +22,11 @@ local Tab = {}
 Tab.__index = Tab
 
 -- Creates rounded corners for UI elements
-local function applyCorner(instance, cornerRadius)
+local function applyCorner(instance, radius)
     local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, cornerRadius)
+    corner.CornerRadius = UDim.new(0, radius)
     corner.Parent = instance
     return corner
-end
-
--- Creates padding for elements
-local function applyPadding(instance, padding)
-    local padding = Instance.new("UIPadding")
-    padding.PaddingLeft = UDim.new(0, padding)
-    padding.Parent = instance
-    return padding
 end
 
 -- UI Elements
@@ -62,7 +53,6 @@ function Tab:AddButton(text, callback)
     
     button.MouseButton1Click:Connect(callback)
     
-    table.insert(self.Buttons, button)
     return button
 end
 
@@ -100,11 +90,13 @@ function Tab:AddToggle(text, default, callback)
     label.TextXAlignment = Enum.TextXAlignment.Left
     label.Parent = container
     
-    -- Toggle background
-    local toggleBg = Instance.new("Frame")
+    -- Toggle background (as TextButton for click events)
+    local toggleBg = Instance.new("TextButton")
     toggleBg.Size = UDim2.new(0, 50, 0, 25)
     toggleBg.Position = UDim2.new(1, -50, 0.5, -12)
     toggleBg.BackgroundColor3 = THEME.ToggleOff
+    toggleBg.AutoButtonColor = false
+    toggleBg.Text = ""
     toggleBg.Parent = container
     applyCorner(toggleBg, 12)
     
@@ -173,11 +165,13 @@ function Tab:AddSlider(text, min, max, default, callback)
     valueLabel.TextXAlignment = Enum.TextXAlignment.Right
     valueLabel.Parent = container
     
-    -- Slider track
-    local track = Instance.new("Frame")
+    -- Slider track (as TextButton for click events)
+    local track = Instance.new("TextButton")
     track.Size = UDim2.new(1, 0, 0, 5)
     track.Position = UDim2.new(0, 0, 1, -15)
     track.BackgroundColor3 = THEME.SliderBar
+    track.AutoButtonColor = false
+    track.Text = ""
     track.Parent = container
     applyCorner(track, 3)
     
@@ -244,8 +238,10 @@ function Tab:AddSlider(text, min, max, default, callback)
         end
     end)
     
-    track.MouseButton1Down:Connect(function(x, y)
-        local value = min + (max - min) * ((x - track.AbsolutePosition.X) / track.AbsoluteSize.X)
+    track.MouseButton1Click:Connect(function()
+        local mousePos = game:GetService("UserInputService"):GetMouseLocation()
+        local relativeX = (mousePos.X - track.AbsolutePosition.X) / track.AbsoluteSize.X
+        local value = min + (max - min) * math.clamp(relativeX, 0, 1)
         updateSlider(value)
     end)
     
@@ -274,13 +270,19 @@ function Neutron:CreateWindow(title)
     self.MainFrame.Parent = self.ScreenGui
     applyCorner(self.MainFrame, 8)
     
-    -- Title bar
-    self.TitleBar = Instance.new("Frame")
+    -- Title bar (as TextButton for drag events)
+    self.TitleBar = Instance.new("TextButton")
     self.TitleBar.Size = UDim2.new(1, 0, 0, 40)
     self.TitleBar.BackgroundColor3 = THEME.Secondary
     self.TitleBar.BorderSizePixel = 0
+    self.TitleBar.AutoButtonColor = false
+    self.TitleBar.Text = ""
     self.TitleBar.Parent = self.MainFrame
-    applyCorner(self.TitleBar, 8, true)  -- Top corners only
+    
+    -- Top corners only
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 8)
+    corner.Parent = self.TitleBar
     
     -- Title text
     self.Title = Instance.new("TextLabel")
@@ -298,16 +300,22 @@ function Neutron:CreateWindow(title)
     local dragging = false
     local dragStart, frameStart
     
-    local function startDrag(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+    self.TitleBar.MouseButton1Down:Connect(function(input)
+        dragging = true
+        dragStart = input.Position
+        frameStart = self.MainFrame.Position
+    end)
+    
+    self.TitleBar.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.Touch then
             dragging = true
             dragStart = input.Position
             frameStart = self.MainFrame.Position
         end
-    end
+    end)
     
-    local function updateDrag(input)
-        if dragging then
+    self.TitleBar.InputChanged:Connect(function(input)
+        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
             local delta = input.Position - dragStart
             self.MainFrame.Position = UDim2.new(
                 frameStart.X.Scale, 
@@ -316,19 +324,13 @@ function Neutron:CreateWindow(title)
                 frameStart.Y.Offset + delta.Y
             )
         end
-    end
+    end)
     
-    local function endDrag()
-        dragging = false
-    end
-    
-    self.TitleBar.InputBegan:Connect(startDrag)
-    self.TitleBar.InputChanged:Connect(function(input)
-        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-            updateDrag(input)
+    self.TitleBar.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = false
         end
     end)
-    self.TitleBar.InputEnded:Connect(endDrag)
     
     -- Separators
     self:CreateSeparator(0)
@@ -363,23 +365,6 @@ function Neutron:CreateWindow(title)
     
     self.ScreenGui.Parent = game:GetService("CoreGui")
     return self
-end
-
--- Creates top-only corners for title bar
-function applyCorner(instance, radius, topOnly)
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, radius)
-    
-    if topOnly then
-        corner.Name = "TopCorner"
-        -- Only round top corners
-        corner:GetPropertyChangedSignal("CornerRadius"):Connect(function()
-            corner.CornerRadius = UDim.new(0, radius)
-        end)
-    end
-    
-    corner.Parent = instance
-    return corner
 end
 
 function Neutron:CreateSeparator(positionY)
