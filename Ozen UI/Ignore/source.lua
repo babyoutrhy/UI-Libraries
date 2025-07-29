@@ -463,6 +463,12 @@ function Tab:AddSlider(config)
     -- Input handling
     local function beginDrag(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            -- Only allow one slider to be dragged at a time
+            if UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) 
+                or #UserInputService:GetConnectedTouchInputs() > 0 then
+                return
+            end
+            
             isDragging = true
             
             -- Calculate initial drag offset
@@ -473,6 +479,9 @@ function Tab:AddSlider(config)
             local dragCount = scrollingFrame:GetAttribute("SliderDragCount") or 0
             scrollingFrame:SetAttribute("SliderDragCount", dragCount + 1)
             scrollingFrame.ScrollingEnabled = false
+            
+            -- Capture input to prevent camera movement
+            input:Capture(Thumb)
         end
     end
 
@@ -492,6 +501,11 @@ function Tab:AddSlider(config)
     local function endDrag()
         if isDragging then
             isDragging = false
+            
+            -- Release input capture
+            if Thumb:IsDescendantOf(game) then
+                UserInputService:ReleaseCapture(Thumb)
+            end
             
             -- Re-enable scrolling
             if scrollingFrame and scrollingFrame:IsDescendantOf(game) then
