@@ -204,37 +204,37 @@ function Tab:AddSlider(text, min, max, default, callback)
     
     -- Drag logic
     local dragging = false
-    local function onInput(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = true
-        end
+    
+    local function startDrag()
+        dragging = true
     end
     
     local function endDrag()
         dragging = false
     end
     
-    local function updateDrag(input)
+    local function updateDrag()
         if dragging then
-            local pos = Vector2.new(input.Position.X, input.Position.Y)
-            local relativeX = (pos.X - track.AbsolutePosition.X) / track.AbsoluteSize.X
+            local mousePos = game:GetService("UserInputService"):GetMouseLocation()
+            local relativeX = (mousePos.X - track.AbsolutePosition.X) / track.AbsoluteSize.X
             local value = min + (max - min) * math.clamp(relativeX, 0, 1)
             updateSlider(value)
         end
     end
     
-    handle.MouseButton1Down:Connect(onInput)
-    handle.TouchLongPress:Connect(onInput)
+    handle.MouseButton1Down:Connect(startDrag)
+    handle.TouchLongPress:Connect(startDrag)
     
     game:GetService("UserInputService").InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or 
+           input.UserInputType == Enum.UserInputType.Touch then
             endDrag()
         end
     end)
     
-    game:GetService("UserInputService").InputChanged:Connect(function(input)
-        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-            updateDrag(input)
+    game:GetService("RunService").Heartbeat:Connect(function()
+        if dragging then
+            updateDrag()
         end
     end)
     
