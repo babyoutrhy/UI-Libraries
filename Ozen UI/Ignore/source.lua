@@ -355,9 +355,6 @@ function Tab:AddSlider(config)
     SliderElement.LayoutOrder = #TabContent:GetChildren()
     SliderElement.Parent = TabContent
 
-    -- Reference to parent scrolling frame
-    local scrollingFrame = TabContent
-
     local min = config.Min or 0
     local max = config.Max or 100
     local step = config.Step or 1
@@ -430,7 +427,9 @@ function Tab:AddSlider(config)
     -- Slider logic
     local isDragging = false
     local dragStartOffset = 0
-    local dragInput = nil
+    local activeInput = nil
+    local dragConnection = nil
+    local endConnection = nil
 
     -- Update slider visual and value
     local function updateValue(percent)
@@ -467,22 +466,35 @@ function Tab:AddSlider(config)
             input.UserInputType == Enum.UserInputType.Touch) and not isDragging then
             
             isDragging = true
-            dragInput = input
+            activeInput = input
             
             -- Calculate initial drag offset
             local thumbPos = Thumb.AbsolutePosition.X + Thumb.AbsoluteSize.X / 2
             dragStartOffset = input.Position.X - thumbPos
             
             -- Disable scrolling in parent frame
-            scrollingFrame.ScrollingEnabled = false
+            TabContent.ScrollingEnabled = false
             
             -- Capture input to prevent camera movement
             input:Capture(Thumb)
+            
+            -- Create dedicated input connections
+            dragConnection = UserInputService.InputChanged:Connect(function(input)
+                if input == activeInput then
+                    updateDrag(input)
+                end
+            end)
+            
+            endConnection = UserInputService.InputEnded:Connect(function(input)
+                if input == activeInput then
+                    endDrag()
+                end
+            end)
         end
     end
 
     local function updateDrag(input)
-        if isDragging and input == dragInput then
+        if isDragging and input == activeInput then
             -- Calculate position relative to track
             local trackStart = Track.AbsolutePosition.X
             local trackEnd = trackStart + Track.AbsoluteSize.X
@@ -494,10 +506,9 @@ function Tab:AddSlider(config)
         end
     end
 
-    local function endDrag(input)
-        if isDragging and input == dragInput then
+    local function endDrag()
+        if isDragging then
             isDragging = false
-            dragInput = nil
             
             -- Release input capture
             if Thumb:IsDescendantOf(game) then
@@ -505,16 +516,28 @@ function Tab:AddSlider(config)
             end
             
             -- Re-enable scrolling
-            if scrollingFrame and scrollingFrame:IsDescendantOf(game) then
-                scrollingFrame.ScrollingEnabled = true
+            if TabContent and TabContent:IsDescendantOf(game) then
+                TabContent.ScrollingEnabled = true
             end
+            
+            -- Clean up connections
+            if dragConnection then
+                dragConnection:Disconnect()
+                dragConnection = nil
+            end
+            if endConnection then
+                endConnection:Disconnect()
+                endConnection = nil
+            end
+            
+            activeInput = nil
         end
     end
 
-    -- Connect input events
-    Thumb.InputBegan:Connect(beginDrag)
+    -- Click on track to set position
     TrackContainer.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or 
+           input.UserInputType == Enum.UserInputType.Touch then
             -- Calculate click position directly
             local trackStart = Track.AbsolutePosition.X
             local percent = (input.Position.X - trackStart) / Track.AbsoluteSize.X
@@ -523,29 +546,16 @@ function Tab:AddSlider(config)
         end
     end)
 
-    UserInputService.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-            updateDrag(input)
-        end
-    end)
-
-    UserInputService.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            endDrag(input)
-        end
-    end)
+    -- Thumb drag
+    Thumb.InputBegan:Connect(beginDrag)
 
     -- Cleanup
-    SliderElement.Destroying:Connect(function()
-        if isDragging then
-            endDrag(dragInput)
-        end
-    end)
+    SliderElement.Destroying:Connect(endDrag)
 
     -- Set initial value
     updateValue((currentValue - min) / (max - min))
         end
-
+        
 function Tab:AddDropdown(config)
     local DropdownElement = CreateElement("Dropdown", 30)
     DropdownElement.ClipsDescendants = false
