@@ -351,13 +351,19 @@ function Tab:AddLabel(config)
 end
 
 function Tab:AddSlider(config)
-    local SliderElement = CreateElement("Slider", 40)
+    local SliderElement = CreateElement("Slider", 50)
     SliderElement.LayoutOrder = #TabContent:GetChildren()
     SliderElement.Parent = TabContent
 
     -- Reference to parent scrolling frame
     local scrollingFrame = TabContent
 
+    local min = config.Min or 0
+    local max = config.Max or 100
+    local step = config.Step or 1
+    local currentValue = config.Default or min
+
+    -- Title
     local SliderTitle = Instance.new("TextLabel")
     SliderTitle.Name = "Title"
     SliderTitle.BackgroundTransparency = 1
@@ -370,103 +376,124 @@ function Tab:AddSlider(config)
     SliderTitle.TextXAlignment = Enum.TextXAlignment.Left
     SliderTitle.Parent = SliderElement
 
+    -- Value display
     local ValueDisplay = Instance.new("TextLabel")
     ValueDisplay.Name = "Value"
     ValueDisplay.BackgroundTransparency = 1
     ValueDisplay.Position = UDim2.new(1, -60, 0, 0)
     ValueDisplay.Size = UDim2.new(0, 50, 0.5, 0)
     ValueDisplay.Font = Enum.Font.Gotham
-    ValueDisplay.Text = tostring(config.Default or config.Min)
+    ValueDisplay.Text = tostring(currentValue)
     ValueDisplay.TextColor3 = Color3.fromRGB(200, 200, 200)
     ValueDisplay.TextSize = 12
     ValueDisplay.TextXAlignment = Enum.TextXAlignment.Right
     ValueDisplay.Parent = SliderElement
 
+    -- Track container
+    local TrackContainer = Instance.new("Frame")
+    TrackContainer.Name = "TrackContainer"
+    TrackContainer.BackgroundTransparency = 1
+    TrackContainer.Position = UDim2.new(0, 10, 0.5, 0)
+    TrackContainer.Size = UDim2.new(1, -20, 0, 20)
+    TrackContainer.Parent = SliderElement
+
+    -- Track background
     local Track = Instance.new("Frame")
     Track.Name = "Track"
     Track.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    Track.Position = UDim2.new(0, 10, 0.5, 0)
-    Track.Size = UDim2.new(1, -20, 0, 4)
-    Track.Parent = SliderElement
+    Track.Position = UDim2.new(0, 0, 0.5, -2)
+    Track.Size = UDim2.new(1, 0, 0, 4)
+    Track.ZIndex = 2
+    Track.Parent = TrackContainer
 
+    -- Fill
     local Fill = Instance.new("Frame")
     Fill.Name = "Fill"
     Fill.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
     Fill.Size = UDim2.new(0, 0, 1, 0)
+    Fill.ZIndex = 3
     Fill.Parent = Track
 
+    -- Thumb
     local Thumb = Instance.new("Frame")
     Thumb.Name = "Thumb"
     Thumb.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    Thumb.Size = UDim2.new(0, 12, 0, 12)
-    Thumb.Position = UDim2.new(0, -6, 0.5, -6)
-    Thumb.Parent = Track
+    Thumb.Size = UDim2.new(0, 16, 0, 16)
+    Thumb.Position = UDim2.new(0, -8, 0.5, -8)
+    Thumb.ZIndex = 4
+    Thumb.Parent = TrackContainer
 
     local Corner = Instance.new("UICorner")
     Corner.CornerRadius = UDim.new(1, 0)
     Corner.Parent = Thumb
 
-    local min = config.Min or 0
-    local max = config.Max or 100
-    local step = config.Step or 1
-    local currentValue = config.Default or min
+    -- Slider logic
     local isDragging = false
+    local dragStartOffset = 0
 
-    local function updateValue(value)
-        currentValue = math.clamp(
-            math.floor((value / Track.AbsoluteSize.X) * (max - min) / step + 0.5) * step + min,
-            min,
-            max
-        )
-                
-        local fillWidth = ((currentValue - min) / (max - min)) * Track.AbsoluteSize.X
+    -- Update slider visual and value
+    local function updateValue(percent)
+        -- Calculate new value
+        local newValue = math.floor(min + (max - min) * percent)
+        newValue = math.clamp(newValue, min, max)
+        
+        -- Apply step
+        if step > 1 then
+            newValue = math.floor(newValue / step + 0.5) * step
+            percent = (newValue - min) / (max - min)
+        end
+        
+        -- Update visual elements
+        local fillWidth = math.clamp(percent, 0, 1) * Track.AbsoluteSize.X
         Fill.Size = UDim2.new(0, fillWidth, 1, 0)
-        Thumb.Position = UDim2.new(0, fillWidth - 6, 0.5, -6)
-        ValueDisplay.Text = tostring(currentValue)
-                
-        if config.Callback then
-            config.Callback(currentValue)
+        Thumb.Position = UDim2.new(percent, -8, 0.5, -8)
+        
+        -- Update display
+        if currentValue ~= newValue then
+            currentValue = newValue
+            ValueDisplay.Text = tostring(currentValue)
+            
+            -- Trigger callback
+            if config.Callback then
+                config.Callback(currentValue)
+            end
         end
     end
 
-    local function inputChanged(input)
-        if isDragging then
-            input:PreventDefault() -- Prevent scrolling while dragging
-            local mousePos = input.Position.X - Track.AbsolutePosition.X
-            updateValue(mousePos)
-        end
-    end
-
+    -- Input handling
     local function beginDrag(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             isDragging = true
+            
+            -- Calculate initial drag offset
+            local thumbPos = Thumb.AbsolutePosition.X + Thumb.AbsoluteSize.X / 2
+            dragStartOffset = input.Position.X - thumbPos
             
             -- Disable scrolling in parent frame
             local dragCount = scrollingFrame:GetAttribute("SliderDragCount") or 0
             scrollingFrame:SetAttribute("SliderDragCount", dragCount + 1)
             scrollingFrame.ScrollingEnabled = false
-            
-            -- Update the value immediately
-            local mousePos = input.Position.X - Track.AbsolutePosition.X
-            updateValue(mousePos)
         end
     end
 
-    -- Make both track and thumb draggable
-    Track.InputBegan:Connect(beginDrag)
-    Thumb.InputBegan:Connect(beginDrag)
-
-    UserInputService.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-            inputChanged(input)
+    local function updateDrag(input)
+        if isDragging then
+            -- Calculate position relative to track
+            local trackStart = Track.AbsolutePosition.X
+            local trackEnd = trackStart + Track.AbsoluteSize.X
+            local mousePos = math.clamp(input.Position.X - dragStartOffset, trackStart, trackEnd)
+            
+            -- Calculate percentage
+            local percent = (mousePos - trackStart) / Track.AbsoluteSize.X
+            updateValue(percent)
         end
-    end)
+    end
 
     local function endDrag()
         if isDragging then
             isDragging = false
             
-            -- Re-enable scrolling if no other sliders are dragging
+            -- Re-enable scrolling
             if scrollingFrame and scrollingFrame:IsDescendantOf(game) then
                 local dragCount = scrollingFrame:GetAttribute("SliderDragCount") or 1
                 dragCount = dragCount - 1
@@ -479,18 +506,36 @@ function Tab:AddSlider(config)
         end
     end
 
+    -- Connect input events
+    Thumb.InputBegan:Connect(beginDrag)
+    TrackContainer.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            -- Calculate click position directly
+            local trackStart = Track.AbsolutePosition.X
+            local percent = (input.Position.X - trackStart) / Track.AbsoluteSize.X
+            updateValue(percent)
+            beginDrag(input)
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if isDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            updateDrag(input)
+        end
+    end)
+
     UserInputService.InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             endDrag()
         end
     end)
 
-    -- Cleanup if slider is destroyed mid-drag
+    -- Cleanup
     SliderElement.Destroying:Connect(endDrag)
 
     -- Set initial value
-    updateValue(((currentValue - min) / (max - min)) * Track.AbsoluteSize.X)
-end
+    updateValue((currentValue - min) / (max - min))
+        end
 
 function Tab:AddDropdown(config)
     local DropdownElement = CreateElement("Dropdown", 30)
