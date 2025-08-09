@@ -288,9 +288,9 @@ function Tab:AddToggle(config)
     IndicatorCorner.Parent = ToggleIndicator
 
     -- Modified state!!!
-        local ToggleState = false
+    local ToggleState = false
 
-        local function updateToggle()
+       local function updateToggle()
             if ToggleState then
                 TweenService:Create(ToggleIndicator, TweenInfo.new(0.2), {Position = UDim2.new(1, -18, 0, 2)}):Play()
                 TweenService:Create(ToggleContainer, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(0, 170, 255)}):Play()
@@ -298,9 +298,9 @@ function Tab:AddToggle(config)
                 TweenService:Create(ToggleIndicator, TweenInfo.new(0.2), {Position = UDim2.new(0, 2, 0, 2)}):Play()
                 TweenService:Create(ToggleContainer, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(30, 30, 30)}):Play()
             end
-        end
+            end
 
-        -- New function to set state programmatically
+    -- New function to set state programmatically
         local function setState(newState)
             if ToggleState ~= newState then
                 ToggleState = newState
@@ -314,15 +314,14 @@ function Tab:AddToggle(config)
                     end
                 end
             end
-        end
-
-        ToggleContainer.InputBegan:Connect(function(input, processed)
+            end
+            
+            ToggleContainer.InputBegan:Connect(function(input, processed)
             if not processed and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
                 setState(not ToggleState)
             end
         end)
-        
-        -- Return toggle object for external control
+    -- Return toggle object for external control
         return {
             SetState = setState
         }
