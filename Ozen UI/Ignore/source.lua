@@ -287,28 +287,46 @@ function Tab:AddToggle(config)
     IndicatorCorner.CornerRadius = UDim.new(1, 0)
     IndicatorCorner.Parent = ToggleIndicator
 
-    -- Rest of the toggle logic remains unchanged...
-    local ToggleState = false
+    -- Modified state!!!
+        local ToggleState = false
 
-    local function updateToggle()
-        if ToggleState then
-            TweenService:Create(ToggleIndicator, TweenInfo.new(0.2), {Position = UDim2.new(1, -18, 0, 2)}):Play()
-            TweenService:Create(ToggleContainer, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(0, 170, 255)}):Play()
-        else
-            TweenService:Create(ToggleIndicator, TweenInfo.new(0.2), {Position = UDim2.new(0, 2, 0, 2)}):Play()
-            TweenService:Create(ToggleContainer, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(30, 30, 30)}):Play()
-        end
-    end
-
-    ToggleContainer.InputBegan:Connect(function(input, processed)
-        if not processed and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
-            ToggleState = not ToggleState
-            updateToggle()
-            if config.Callback then
-                config.Callback(ToggleState)
+        local function updateToggle()
+            if ToggleState then
+                TweenService:Create(ToggleIndicator, TweenInfo.new(0.2), {Position = UDim2.new(1, -18, 0, 2)}):Play()
+                TweenService:Create(ToggleContainer, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(0, 170, 255)}):Play()
+            else
+                TweenService:Create(ToggleIndicator, TweenInfo.new(0.2), {Position = UDim2.new(0, 2, 0, 2)}):Play()
+                TweenService:Create(ToggleContainer, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(30, 30, 30)}):Play()
             end
         end
-    end)
+
+        -- New function to set state programmatically
+        local function setState(newState)
+            if ToggleState ~= newState then
+                ToggleState = newState
+                updateToggle()
+                if config.Callback then
+                    local success = config.Callback(ToggleState)
+                    -- Automatically turn off toggle if callback returns false
+                    if success == false then
+                        ToggleState = false
+                        updateToggle()
+                    end
+                end
+            end
+        end
+
+        ToggleContainer.InputBegan:Connect(function(input, processed)
+            if not processed and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
+                setState(not ToggleState)
+            end
+        end)
+        
+        -- Return toggle object for external control
+        return {
+            SetState = setState
+        }
+        end
 end
 
 function Tab:AddButton(config)
