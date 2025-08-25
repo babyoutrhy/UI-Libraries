@@ -1,450 +1,472 @@
+-- Neutron UI Library
+-- Version 1.0
+-- GitHub: https://github.com/yourusername/NeutronUI
+
 local Neutron = {}
 Neutron.__index = Neutron
 
--- Bootstrap Icons CDN
-local ICON_CDN = "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/icons/%s.png"
-
--- Theme Configuration
-local THEME = {
-    Primary = Color3.fromRGB(40, 40, 50),
-    Secondary = Color3.fromRGB(30, 30, 40),
-    Accent = Color3.fromRGB(100, 70, 200),
-    Text = Color3.fromRGB(240, 240, 240),
-    Border = Color3.fromRGB(60, 60, 70),
-    ToggleOn = Color3.fromRGB(80, 180, 80),
-    ToggleOff = Color3.fromRGB(100, 100, 100),
-    SliderBar = Color3.fromRGB(70, 70, 90),
-    SliderHandle = Color3.fromRGB(150, 120, 220)
+-- Theme definitions
+Neutron.Themes = {
+    SeaTheme = {
+        Main = Color3.fromRGB(0, 102, 204),
+        Secondary = Color3.fromRGB(0, 76, 153),
+        Text = Color3.fromRGB(240, 240, 240),
+        Background = Color3.fromRGB(40, 40, 50),
+        Hover = Color3.fromRGB(0, 122, 204)
+    },
+    DarkTheme = {
+        Main = Color3.fromRGB(30, 30, 30),
+        Secondary = Color3.fromRGB(20, 20, 20),
+        Text = Color3.fromRGB(220, 220, 220),
+        Background = Color3.fromRGB(15, 15, 15),
+        Hover = Color3.fromRGB(50, 50, 50)
+    },
+    GrapeTheme = {
+        Main = Color3.fromRGB(106, 13, 173),
+        Secondary = Color3.fromRGB(74, 20, 140),
+        Text = Color3.fromRGB(240, 240, 240),
+        Background = Color3.fromRGB(40, 30, 60),
+        Hover = Color3.fromRGB(126, 33, 193)
+    },
+    FireTheme = {
+        Main = Color3.fromRGB(220, 80, 20),
+        Secondary = Color3.fromRGB(180, 60, 10),
+        Text = Color3.fromRGB(240, 240, 240),
+        Background = Color3.fromRGB(50, 35, 30),
+        Hover = Color3.fromRGB(240, 100, 40)
+    },
+    ForestTheme = {
+        Main = Color3.fromRGB(24, 130, 70),
+        Secondary = Color3.fromRGB(19, 90, 47),
+        Text = Color3.fromRGB(240, 240, 240),
+        Background = Color3.fromRGB(30, 40, 35),
+        Hover = Color3.fromRGB(34, 150, 90)
+    }
 }
 
--- Tab metatable
-local Tab = {}
-Tab.__index = Tab
-
--- Creates rounded corners for UI elements
-local function applyCorner(instance, radius)
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, radius)
-    corner.Parent = instance
-    return corner
-end
-
--- UI Elements
-function Tab:AddButton(text, callback)
-    local button = Instance.new("TextButton")
-    button.Size = UDim2.new(1, -20, 0, 35)
-    button.Text = text
-    button.Font = Enum.Font.Gotham
-    button.TextSize = 14
-    button.TextColor3 = THEME.Text
-    button.BackgroundColor3 = THEME.Accent
-    button.AutoButtonColor = false
-    button.Parent = self.Content
-    
-    applyCorner(button, 6)
-    
-    button.MouseEnter:Connect(function()
-        button.BackgroundColor3 = THEME.Accent:lerp(Color3.new(1, 1, 1), 0.2)
-    end)
-    
-    button.MouseLeave:Connect(function()
-        button.BackgroundColor3 = THEME.Accent
-    end)
-    
-    button.MouseButton1Click:Connect(callback)
-    
-    return button
-end
-
-function Tab:AddLabel(text)
-    local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(1, -20, 0, 20)
-    label.Text = text
-    label.Font = Enum.Font.Gotham
-    label.TextSize = 14
-    label.TextColor3 = THEME.Text
-    label.BackgroundTransparency = 1
-    label.TextXAlignment = Enum.TextXAlignment.Left
-    label.Parent = self.Content
-    return label
-end
-
-function Tab:AddToggle(text, default, callback)
-    local toggle = {}
-    toggle.Value = default or false
-    
-    -- Container
-    local container = Instance.new("Frame")
-    container.Size = UDim2.new(1, -20, 0, 30)
-    container.BackgroundTransparency = 1
-    container.Parent = self.Content
-    
-    -- Label
-    local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(0.7, 0, 1, 0)
-    label.Text = text
-    label.Font = Enum.Font.Gotham
-    label.TextSize = 14
-    label.TextColor3 = THEME.Text
-    label.BackgroundTransparency = 1
-    label.TextXAlignment = Enum.TextXAlignment.Left
-    label.Parent = container
-    
-    -- Toggle background (as TextButton for click events)
-    local toggleBg = Instance.new("TextButton")
-    toggleBg.Size = UDim2.new(0, 50, 0, 25)
-    toggleBg.Position = UDim2.new(1, -50, 0.5, -12)
-    toggleBg.BackgroundColor3 = THEME.ToggleOff
-    toggleBg.AutoButtonColor = false
-    toggleBg.Text = ""
-    toggleBg.Parent = container
-    applyCorner(toggleBg, 12)
-    
-    -- Toggle handle
-    local toggleHandle = Instance.new("Frame")
-    toggleHandle.Size = UDim2.new(0, 21, 0, 21)
-    toggleHandle.Position = UDim2.new(0, 2, 0.5, -10)
-    toggleHandle.BackgroundColor3 = Color3.new(1, 1, 1)
-    toggleHandle.Parent = toggleBg
-    applyCorner(toggleHandle, 10)
-    
-    -- Update toggle state
-    local function updateToggle()
-        if toggle.Value then
-            toggleBg.BackgroundColor3 = THEME.ToggleOn
-            toggleHandle.Position = UDim2.new(1, -23, 0.5, -10)
-        else
-            toggleBg.BackgroundColor3 = THEME.ToggleOff
-            toggleHandle.Position = UDim2.new(0, 2, 0.5, -10)
-        end
-        if callback then callback(toggle.Value) end
-    end
-    
-    -- Click handler
-    toggleBg.MouseButton1Click:Connect(function()
-        toggle.Value = not toggle.Value
-        updateToggle()
-    end)
-    
-    -- Initialize
-    updateToggle()
-    
-    return toggle
-end
-
-function Tab:AddSlider(text, min, max, default, callback)
-    local slider = {}
-    slider.Value = default or min
-    
-    -- Container
-    local container = Instance.new("Frame")
-    container.Size = UDim2.new(1, -20, 0, 50)
-    container.BackgroundTransparency = 1
-    container.Parent = self.Content
-    
-    -- Label
-    local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(1, 0, 0, 20)
-    label.Text = text
-    label.Font = Enum.Font.Gotham
-    label.TextSize = 14
-    label.TextColor3 = THEME.Text
-    label.BackgroundTransparency = 1
-    label.TextXAlignment = Enum.TextXAlignment.Left
-    label.Parent = container
-    
-    -- Value display
-    local valueLabel = Instance.new("TextLabel")
-    valueLabel.Size = UDim2.new(0, 60, 0, 20)
-    valueLabel.Position = UDim2.new(1, -60, 0, 0)
-    valueLabel.Text = tostring(slider.Value)
-    valueLabel.Font = Enum.Font.Gotham
-    valueLabel.TextSize = 14
-    valueLabel.TextColor3 = THEME.Text
-    valueLabel.BackgroundTransparency = 1
-    valueLabel.TextXAlignment = Enum.TextXAlignment.Right
-    valueLabel.Parent = container
-    
-    -- Slider track (as TextButton for click events)
-    local track = Instance.new("TextButton")
-    track.Size = UDim2.new(1, 0, 0, 5)
-    track.Position = UDim2.new(0, 0, 1, -15)
-    track.BackgroundColor3 = THEME.SliderBar
-    track.AutoButtonColor = false
-    track.Text = ""
-    track.Parent = container
-    applyCorner(track, 3)
-    
-    -- Slider fill
-    local fill = Instance.new("Frame")
-    fill.Size = UDim2.new(0, 0, 1, 0)
-    fill.BackgroundColor3 = THEME.Accent
-    fill.Parent = track
-    applyCorner(fill, 3)
-    
-    -- Slider handle
-    local handle = Instance.new("TextButton")
-    handle.Size = UDim2.new(0, 20, 0, 20)
-    handle.Position = UDim2.new(0, -10, 0.5, -10)
-    handle.BackgroundColor3 = THEME.SliderHandle
-    handle.AutoButtonColor = false
-    handle.Text = ""
-    handle.Parent = track
-    applyCorner(handle, 10)
-    
-    -- Update slider position
-    local function updateSlider(value)
-        slider.Value = math.clamp(value, min, max)
-        local percent = (slider.Value - min) / (max - min)
-        fill.Size = UDim2.new(percent, 0, 1, 0)
-        handle.Position = UDim2.new(percent, -10, 0.5, -10)
-        valueLabel.Text = tostring(math.floor(slider.Value))
-        if callback then callback(slider.Value) end
-    end
-    
-    -- Drag logic
-    local dragging = false
-    
-    local function startDrag()
-        dragging = true
-    end
-    
-    local function endDrag()
-        dragging = false
-    end
-    
-    local function updateDrag()
-        if dragging then
-            local mousePos = game:GetService("UserInputService"):GetMouseLocation()
-            local relativeX = (mousePos.X - track.AbsolutePosition.X) / track.AbsoluteSize.X
-            local value = min + (max - min) * math.clamp(relativeX, 0, 1)
-            updateSlider(value)
-        end
-    end
-    
-    handle.MouseButton1Down:Connect(startDrag)
-    handle.TouchLongPress:Connect(startDrag)
-    
-    game:GetService("UserInputService").InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or 
-           input.UserInputType == Enum.UserInputType.Touch then
-            endDrag()
-        end
-    end)
-    
-    game:GetService("RunService").Heartbeat:Connect(function()
-        if dragging then
-            updateDrag()
-        end
-    end)
-    
-    track.MouseButton1Click:Connect(function()
-        local mousePos = game:GetService("UserInputService"):GetMouseLocation()
-        local relativeX = (mousePos.X - track.AbsolutePosition.X) / track.AbsoluteSize.X
-        local value = min + (max - min) * math.clamp(relativeX, 0, 1)
-        updateSlider(value)
-    end)
-    
-    -- Initialize
-    updateSlider(slider.Value)
-    
-    return slider
-end
-
-function Neutron:CreateWindow(title)
+function Neutron.new(options)
     local self = setmetatable({}, Neutron)
-    self.Tabs = {}
     
-    -- Create main container
-    self.ScreenGui = Instance.new("ScreenGui")
-    self.ScreenGui.Name = "NeutronUI"
-    self.ScreenGui.ResetOnSpawn = false
-    self.ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    -- Default options
+    self.options = options or {}
+    self.theme = options.Theme or "DarkTheme"
+    self.name = options.Name or "Neutron UI"
+    self.tabs = {}
+    self.currentTab = nil
     
-    -- Main frame
-    self.MainFrame = Instance.new("Frame")
-    self.MainFrame.Size = UDim2.new(0, 450, 0, 350)
-    self.MainFrame.Position = UDim2.new(0.5, -225, 0.5, -175)
-    self.MainFrame.BackgroundColor3 = THEME.Primary
-    self.MainFrame.BorderSizePixel = 0
-    self.MainFrame.Parent = self.ScreenGui
-    applyCorner(self.MainFrame, 8)
+    -- Create the main UI container
+    self:CreateUI()
     
-    -- Title bar (as TextButton for drag events)
-    self.TitleBar = Instance.new("TextButton")
-    self.TitleBar.Size = UDim2.new(1, 0, 0, 40)
-    self.TitleBar.BackgroundColor3 = THEME.Secondary
-    self.TitleBar.BorderSizePixel = 0
-    self.TitleBar.AutoButtonColor = false
-    self.TitleBar.Text = ""
-    self.TitleBar.Parent = self.MainFrame
-    
-    -- Top corners only
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 8)
-    corner.Parent = self.TitleBar
-    
-    -- Title text
-    self.Title = Instance.new("TextLabel")
-    self.Title.Size = UDim2.new(1, -20, 1, 0)
-    self.Title.Position = UDim2.new(0, 10, 0, 0)
-    self.Title.BackgroundTransparency = 1
-    self.Title.Text = title
-    self.Title.TextColor3 = THEME.Text
-    self.Title.Font = Enum.Font.GothamBold
-    self.Title.TextSize = 18
-    self.Title.TextXAlignment = Enum.TextXAlignment.Left
-    self.Title.Parent = self.TitleBar
-    
-    -- Make window draggable
-    local dragging = false
-    local dragStart, frameStart
-    
-    self.TitleBar.MouseButton1Down:Connect(function(input)
-        dragging = true
-        dragStart = input.Position
-        frameStart = self.MainFrame.Position
-    end)
-    
-    self.TitleBar.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.Touch then
-            dragging = true
-            dragStart = input.Position
-            frameStart = self.MainFrame.Position
-        end
-    end)
-    
-    self.TitleBar.InputChanged:Connect(function(input)
-        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-            local delta = input.Position - dragStart
-            self.MainFrame.Position = UDim2.new(
-                frameStart.X.Scale, 
-                frameStart.X.Offset + delta.X,
-                frameStart.Y.Scale,
-                frameStart.Y.Offset + delta.Y
-            )
-        end
-    end)
-    
-    self.TitleBar.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = false
-        end
-    end)
-    
-    -- Separators
-    self:CreateSeparator(0)
-    self:CreateSeparator(40)
-    
-    -- Tab container
-    self.TabContainer = Instance.new("ScrollingFrame")
-    self.TabContainer.Size = UDim2.new(0, 150, 1, -80)
-    self.TabContainer.Position = UDim2.new(0, 0, 0, 40)
-    self.TabContainer.BackgroundTransparency = 1
-    self.TabContainer.ScrollBarThickness = 3
-    self.TabContainer.CanvasSize = UDim2.new(0, 0, 0, 0)
-    self.TabContainer.AutomaticCanvasSize = Enum.AutomaticSize.Y
-    self.TabContainer.Parent = self.MainFrame
-    
-    local UIListLayout = Instance.new("UIListLayout")
-    UIListLayout.Padding = UDim.new(0, 5)
-    UIListLayout.Parent = self.TabContainer
-    
-    -- Content container
-    self.ContentFrame = Instance.new("Frame")
-    self.ContentFrame.Size = UDim2.new(1, -155, 1, -45)
-    self.ContentFrame.Position = UDim2.new(0, 150, 0, 40)
-    self.ContentFrame.BackgroundTransparency = 1
-    self.ContentFrame.ClipsDescendants = true
-    self.ContentFrame.Parent = self.MainFrame
-    
-    local contentLayout = Instance.new("UIListLayout")
-    contentLayout.Padding = UDim.new(0, 8)
-    contentLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-    contentLayout.Parent = self.ContentFrame
-    
-    self.ScreenGui.Parent = game:GetService("CoreGui")
     return self
 end
 
-function Neutron:CreateSeparator(positionY)
-    local separator = Instance.new("Frame")
-    separator.Size = UDim2.new(1, 0, 0, 1)
-    separator.Position = UDim2.new(0, 0, 0, positionY)
-    separator.BackgroundColor3 = THEME.Border
-    separator.BorderSizePixel = 0
-    separator.Parent = self.MainFrame
-    return separator
+function Neutron:CreateUI()
+    -- Create ScreenGui
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "NeutronUI"
+    screenGui.Parent = game:GetService("CoreGui")
+    screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    
+    -- Main frame
+    local mainFrame = Instance.new("Frame")
+    mainFrame.Name = "MainFrame"
+    mainFrame.Size = UDim2.new(0, 450, 0, 350)
+    mainFrame.Position = UDim2.new(0.5, -225, 0.5, -175)
+    mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+    mainFrame.BackgroundColor3 = Neutron.Themes[self.theme].Background
+    mainFrame.BorderSizePixel = 0
+    mainFrame.ClipsDescendants = true
+    mainFrame.Parent = screenGui
+    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 8)
+    corner.Parent = mainFrame
+    
+    -- Title bar
+    local titleBar = Instance.new("Frame")
+    titleBar.Name = "TitleBar"
+    titleBar.Size = UDim2.new(1, 0, 0, 30)
+    titleBar.Position = UDim2.new(0, 0, 0, 0)
+    titleBar.BackgroundColor3 = Neutron.Themes[self.theme].Main
+    titleBar.BorderSizePixel = 0
+    titleBar.Parent = mainFrame
+    
+    local titleCorner = Instance.new("UICorner")
+    titleCorner.CornerRadius = UDim.new(0, 8)
+    titleCorner.Parent = titleBar
+    
+    local title = Instance.new("TextLabel")
+    title.Name = "Title"
+    title.Size = UDim2.new(1, -40, 1, 0)
+    title.Position = UDim2.new(0, 10, 0, 0)
+    title.BackgroundTransparency = 1
+    title.Text = self.name
+    title.TextColor3 = Neutron.Themes[self.theme].Text
+    title.TextXAlignment = Enum.TextXAlignment.Left
+    title.Font = Enum.Font.GothamBold
+    title.TextSize = 14
+    title.Parent = titleBar
+    
+    local closeButton = Instance.new("TextButton")
+    closeButton.Name = "CloseButton"
+    closeButton.Size = UDim2.new(0, 30, 0, 30)
+    closeButton.Position = UDim2.new(1, -30, 0, 0)
+    closeButton.BackgroundTransparency = 1
+    closeButton.Text = "X"
+    closeButton.TextColor3 = Neutron.Themes[self.theme].Text
+    closeButton.Font = Enum.Font.GothamBold
+    closeButton.TextSize = 14
+    closeButton.Parent = titleBar
+    
+    closeButton.MouseButton1Click:Connect(function()
+        screenGui:Destroy()
+    end)
+    
+    -- Tab container
+    local tabContainer = Instance.new("Frame")
+    tabContainer.Name = "TabContainer"
+    tabContainer.Size = UDim2.new(1, -20, 0, 30)
+    tabContainer.Position = UDim2.new(0, 10, 0, 35)
+    tabContainer.BackgroundTransparency = 1
+    tabContainer.Parent = mainFrame
+    
+    local tabListLayout = Instance.new("UIListLayout")
+    tabListLayout.Name = "TabListLayout"
+    tabListLayout.FillDirection = Enum.FillDirection.Horizontal
+    tabListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    tabListLayout.Padding = UDim.new(0, 5)
+    tabListLayout.Parent = tabContainer
+    
+    -- Content container
+    local contentContainer = Instance.new("Frame")
+    contentContainer.Name = "ContentContainer"
+    contentContainer.Size = UDim2.new(1, -20, 1, -70)
+    contentContainer.Position = UDim2.new(0, 10, 0, 70)
+    contentContainer.BackgroundTransparency = 1
+    contentContainer.ClipsDescendants = true
+    contentContainer.Parent = mainFrame
+    
+    local contentListLayout = Instance.new("UIListLayout")
+    contentListLayout.Name = "ContentListLayout"
+    contentListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    contentListLayout.Padding = UDim.new(0, 5)
+    contentListLayout.Parent = contentContainer
+    
+    self.screenGui = screenGui
+    self.mainFrame = mainFrame
+    self.tabContainer = tabContainer
+    self.contentContainer = contentContainer
 end
 
-function Neutron:AddTab(name, iconName)
-    local tab = setmetatable({
-        Name = name,
-        Icon = iconName,
-        Buttons = {}
-    }, Tab)
+function Neutron:Tab(name)
+    local tab = {}
+    tab.name = name
+    tab.elements = {}
     
     -- Create tab button
     local tabButton = Instance.new("TextButton")
-    tabButton.Size = UDim2.new(1, -10, 0, 35)
-    tabButton.BackgroundColor3 = THEME.Secondary
-    tabButton.AutoButtonColor = false
-    tabButton.Text = ""
-    tabButton.Parent = self.TabContainer
+    tabButton.Name = name .. "TabButton"
+    tabButton.Size = UDim2.new(0, 80, 1, 0)
+    tabButton.BackgroundColor3 = Neutron.Themes[self.theme].Secondary
+    tabButton.BorderSizePixel = 0
+    tabButton.Text = name
+    tabButton.TextColor3 = Neutron.Themes[self.theme].Text
+    tabButton.Font = Enum.Font.Gotham
+    tabButton.TextSize = 12
+    tabButton.Parent = self.tabContainer
     
-    applyCorner(tabButton, 6)
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 5)
+    corner.Parent = tabButton
     
-    -- Tab icon
-    local icon = Instance.new("ImageLabel")
-    icon.Size = UDim2.new(0, 20, 0, 20)
-    icon.Position = UDim2.new(0, 10, 0.5, -10)
-    icon.BackgroundTransparency = 1
-    icon.Image = string.format(ICON_CDN, iconName)
-    icon.Parent = tabButton
+    -- Create tab content
+    local tabContent = Instance.new("ScrollingFrame")
+    tabContent.Name = name .. "TabContent"
+    tabContent.Size = UDim2.new(1, 0, 1, 0)
+    tabContent.Position = UDim2.new(0, 0, 0, 0)
+    tabContent.BackgroundTransparency = 1
+    tabContent.BorderSizePixel = 0
+    tabContent.ScrollBarThickness = 5
+    tabContent.Visible = false
+    tabContent.Parent = self.contentContainer
     
-    -- Tab label
-    local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(1, -40, 1, 0)
-    label.Position = UDim2.new(0, 40, 0, 0)
-    label.BackgroundTransparency = 1
-    label.Text = name
-    label.TextColor3 = THEME.Text
-    label.Font = Enum.Font.Gotham
-    label.TextSize = 14
-    label.TextXAlignment = Enum.TextXAlignment.Left
-    label.Parent = tabButton
+    local contentListLayout = Instance.new("UIListLayout")
+    contentListLayout.Name = "ContentListLayout"
+    contentListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    contentListLayout.Padding = UDim.new(0, 5)
+    contentListLayout.Parent = tabContent
     
-    -- Create content frame
-    tab.Content = Instance.new("Frame")
-    tab.Content.Size = UDim2.new(1, 0, 1, 0)
-    tab.Content.BackgroundTransparency = 1
-    tab.Content.Visible = false
-    tab.Content.Parent = self.ContentFrame
+    contentListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        tabContent.CanvasSize = UDim2.new(0, 0, 0, contentListLayout.AbsoluteContentSize.Y)
+    end)
     
-    local contentLayout = Instance.new("UIListLayout")
-    contentLayout.Padding = UDim.new(0, 8)
-    contentLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-    contentLayout.Parent = tab.Content
+    tab.button = tabButton
+    tab.content = tabContent
     
-    -- Selection logic
+    -- Tab selection logic
     tabButton.MouseButton1Click:Connect(function()
         self:SelectTab(tab)
     end)
     
-    -- Default selection
-    if #self.Tabs == 0 then
+    -- Make this the first tab if none selected
+    if not self.currentTab then
         self:SelectTab(tab)
     end
     
-    table.insert(self.Tabs, tab)
-    return tab
+    table.insert(self.tabs, tab)
+    
+    return setmetatable(tab, {__index = self})
 end
 
-function Neutron:SelectTab(selectedTab)
-    for _, tab in ipairs(self.Tabs) do
-        tab.Content.Visible = (tab == selectedTab)
+function Neutron:SelectTab(tab)
+    -- Hide all tab contents
+    for _, t in ipairs(self.tabs) do
+        t.content.Visible = false
+        t.button.BackgroundColor3 = Neutron.Themes[self.theme].Secondary
     end
+    
+    -- Show selected tab content
+    tab.content.Visible = true
+    tab.button.BackgroundColor3 = Neutron.Themes[self.theme].Main
+    
+    self.currentTab = tab
 end
 
--- Initialize library
+function Neutron:Button(name, callback)
+    local button = Instance.new("TextButton")
+    button.Name = name .. "Button"
+    button.Size = UDim2.new(1, 0, 0, 30)
+    button.BackgroundColor3 = Neutron.Themes[self.theme].Secondary
+    button.BorderSizePixel = 0
+    button.Text = name
+    button.TextColor3 = Neutron.Themes[self.theme].Text
+    button.Font = Enum.Font.Gotham
+    button.TextSize = 12
+    button.Parent = self.currentTab.content
+    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 5)
+    corner.Parent = button
+    
+    -- Hover effect
+    button.MouseEnter:Connect(function()
+        game:GetService("TweenService"):Create(
+            button,
+            TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+            {BackgroundColor3 = Neutron.Themes[self.theme].Hover}
+        ):Play()
+    end)
+    
+    button.MouseLeave:Connect(function()
+        game:GetService("TweenService"):Create(
+            button,
+            TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+            {BackgroundColor3 = Neutron.Themes[self.theme].Secondary}
+        ):Play()
+    end)
+    
+    button.MouseButton1Click:Connect(function()
+        callback()
+    end)
+    
+    return button
+end
+
+function Neutron:Toggle(name, default, callback)
+    local toggle = {}
+    toggle.value = default or false
+    
+    local toggleFrame = Instance.new("Frame")
+    toggleFrame.Name = name .. "Toggle"
+    toggleFrame.Size = UDim2.new(1, 0, 0, 30)
+    toggleFrame.BackgroundTransparency = 1
+    toggleFrame.Parent = self.currentTab.content
+    
+    local toggleLabel = Instance.new("TextLabel")
+    toggleLabel.Name = "ToggleLabel"
+    toggleLabel.Size = UDim2.new(0.7, 0, 1, 0)
+    toggleLabel.Position = UDim2.new(0, 0, 0, 0)
+    toggleLabel.BackgroundTransparency = 1
+    toggleLabel.Text = name
+    toggleLabel.TextColor3 = Neutron.Themes[self.theme].Text
+    toggleLabel.Font = Enum.Font.Gotham
+    toggleLabel.TextSize = 12
+    toggleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    toggleLabel.Parent = toggleFrame
+    
+    local toggleButton = Instance.new("TextButton")
+    toggleButton.Name = "ToggleButton"
+    toggleButton.Size = UDim2.new(0, 40, 0, 20)
+    toggleButton.Position = UDim2.new(1, -40, 0.5, -10)
+    toggleButton.AnchorPoint = Vector2.new(1, 0.5)
+    toggleButton.BackgroundColor3 = toggle.value and Neutron.Themes[self.theme].Main or Neutron.Themes[self.theme].Secondary
+    toggleButton.BorderSizePixel = 0
+    toggleButton.Text = ""
+    toggleButton.Parent = toggleFrame
+    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 10)
+    corner.Parent = toggleButton
+    
+    local toggleKnob = Instance.new("Frame")
+    toggleKnob.Name = "ToggleKnob"
+    toggleKnob.Size = UDim2.new(0, 16, 0, 16)
+    toggleKnob.Position = UDim2.new(0, toggle.value and 20 or 2, 0.5, -8)
+    toggleKnob.AnchorPoint = Vector2.new(0, 0.5)
+    toggleKnob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    toggleKnob.BorderSizePixel = 0
+    toggleKnob.Parent = toggleButton
+    
+    local knobCorner = Instance.new("UICorner")
+    knobCorner.CornerRadius = UDim.new(0, 8)
+    knobCorner.Parent = toggleKnob
+    
+    toggleButton.MouseButton1Click:Connect(function()
+        toggle.value = not toggle.value
+        
+        -- Animate toggle
+        game:GetService("TweenService"):Create(
+            toggleKnob,
+            TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+            {Position = UDim2.new(0, toggle.value and 20 or 2, 0.5, -8)}
+        ):Play()
+        
+        game:GetService("TweenService"):Create(
+            toggleButton,
+            TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+            {BackgroundColor3 = toggle.value and Neutron.Themes[self.theme].Main or Neutron.Themes[self.theme].Secondary}
+        ):Play()
+        
+        callback(toggle.value)
+    end)
+    
+    return toggle
+end
+
+function Neutron:Slider(name, options, callback)
+    local slider = {}
+    slider.min = options.min or 0
+    slider.max = options.max or 100
+    slider.value = options.default or slider.min
+    slider.precise = options.precise or false
+    
+    local sliderFrame = Instance.new("Frame")
+    sliderFrame.Name = name .. "Slider"
+    sliderFrame.Size = UDim2.new(1, 0, 0, 50)
+    sliderFrame.BackgroundTransparency = 1
+    sliderFrame.Parent = self.currentTab.content
+    
+    local sliderLabel = Instance.new("TextLabel")
+    sliderLabel.Name = "SliderLabel"
+    sliderLabel.Size = UDim2.new(1, 0, 0, 20)
+    sliderLabel.Position = UDim2.new(0, 0, 0, 0)
+    sliderLabel.BackgroundTransparency = 1
+    sliderLabel.Text = name .. ": " .. tostring(slider.value)
+    sliderLabel.TextColor3 = Neutron.Themes[self.theme].Text
+    sliderLabel.Font = Enum.Font.Gotham
+    sliderLabel.TextSize = 12
+    sliderLabel.TextXAlignment = Enum.TextXAlignment.Left
+    sliderLabel.Parent = sliderFrame
+    
+    local track = Instance.new("Frame")
+    track.Name = "Track"
+    track.Size = UDim2.new(1, 0, 0, 5)
+    track.Position = UDim2.new(0, 0, 0, 30)
+    track.BackgroundColor3 = Neutron.Themes[self.theme].Secondary
+    track.BorderSizePixel = 0
+    track.Parent = sliderFrame
+    
+    local trackCorner = Instance.new("UICorner")
+    trackCorner.CornerRadius = UDim.new(0, 3)
+    trackCorner.Parent = track
+    
+    local fill = Instance.new("Frame")
+    fill.Name = "Fill"
+    fill.Size = UDim2.new(0, 0, 1, 0)
+    fill.Position = UDim2.new(0, 0, 0, 0)
+    fill.BackgroundColor3 = Neutron.Themes[self.theme].Main
+    fill.BorderSizePixel = 0
+    fill.Parent = track
+    
+    local fillCorner = Instance.new("UICorner")
+    fillCorner.CornerRadius = UDim.new(0, 3)
+    fillCorner.Parent = fill
+    
+    local knob = Instance.new("TextButton")
+    knob.Name = "Knob"
+    knob.Size = UDim2.new(0, 15, 0, 15)
+    knob.Position = UDim2.new(0, 0, 0.5, -7.5)
+    knob.AnchorPoint = Vector2.new(0, 0.5)
+    knob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    knob.BorderSizePixel = 0
+    knob.Text = ""
+    knob.Parent = track
+    
+    local knobCorner = Instance.new("UICorner")
+    knobCorner.CornerRadius = UDim.new(0, 7.5)
+    knobCorner.Parent = knob
+    
+    -- Update slider display
+    local function updateSlider(value)
+        slider.value = math.clamp(value, slider.min, slider.max)
+        local percentage = (slider.value - slider.min) / (slider.max - slider.min)
+        
+        fill.Size = UDim2.new(percentage, 0, 1, 0)
+        knob.Position = UDim2.new(percentage, 0, 0.5, -7.5)
+        sliderLabel.Text = name .. ": " .. (slider.precise and string.format("%.2f", slider.value) or tostring(math.floor(slider.value)))
+        
+        callback(slider.value)
+    end
+    
+    -- Initialize slider
+    updateSlider(slider.value)
+    
+    -- Slider interaction
+    local dragging = false
+    
+    local function updateFromInput(input)
+        local relativeX = (input.Position.X - track.AbsolutePosition.X) / track.AbsoluteSize.X
+        local value = slider.min + (relativeX * (slider.max - slider.min))
+        updateSlider(value)
+    end
+    
+    knob.MouseButton1Down:Connect(function()
+        dragging = true
+    end)
+    
+    track.MouseButton1Down:Connect(function(input)
+        updateFromInput(input)
+        dragging = true
+    end)
+    
+    game:GetService("UserInputService").InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = false
+        end
+    end)
+    
+    game:GetService("UserInputService").InputChanged:Connect(function(input)
+        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+            updateFromInput(input)
+        end
+    end)
+    
+    return slider
+end
+
+function Neutron:Label(text)
+    local label = Instance.new("TextLabel")
+    label.Name = "Label"
+    label.Size = UDim2.new(1, 0, 0, 20)
+    label.BackgroundTransparency = 1
+    label.Text = text
+    label.TextColor3 = Neutron.Themes[self.theme].Text
+    label.Font = Enum.Font.Gotham
+    label.TextSize = 12
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Parent = self.currentTab.content
+    
+    return label
+end
+
 return Neutron
