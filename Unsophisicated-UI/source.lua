@@ -34,7 +34,7 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
     ToggleCorner.CornerRadius = UDim.new(1, 0)
     ToggleCorner.Parent = ToggleButton
 
-    -- Smooth drag for toggle button (RenderStepped)
+    -- Smooth drag for toggle button (RenderStepped) - FIXED Vector2 conversion
     local toggleDragging = false
     local toggleDragStart, toggleStartPos
     local toggleConnection
@@ -43,13 +43,13 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
         if processed then return end
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             toggleDragging = true
-            toggleDragStart = input.Position
+            -- Convert input.Position (Vector3) to Vector2
+            toggleDragStart = Vector2.new(input.Position.X, input.Position.Y)
             toggleStartPos = ToggleButton.Position
 
-            -- Start polling mouse position every frame
             toggleConnection = RunService.RenderStepped:Connect(function()
                 if not toggleDragging then return end
-                local mousePos = UserInputService:GetMouseLocation()
+                local mousePos = UserInputService:GetMouseLocation() -- Vector2
                 local delta = mousePos - toggleDragStart
                 ToggleButton.Position = UDim2.new(
                     toggleStartPos.X.Scale,
@@ -117,7 +117,7 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
     Title.TextXAlignment = Enum.TextXAlignment.Left
     Title.Parent = TitleBar
 
-    -- Smooth drag for title bar (RenderStepped)
+    -- Smooth drag for title bar (RenderStepped) - FIXED Vector2 conversion
     local mainDragging = false
     local mainDragStart, mainStartPos
     local mainConnection
@@ -126,7 +126,7 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
         if processed then return end
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             mainDragging = true
-            mainDragStart = input.Position
+            mainDragStart = Vector2.new(input.Position.X, input.Position.Y)
             mainStartPos = MainFrame.Position
 
             mainConnection = RunService.RenderStepped:Connect(function()
@@ -447,10 +447,8 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
                 if processed then return end
                 if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                     dragging = true
-                    -- Immediately set value at click position
                     updateValueFromPos(input.Position.X - Track.AbsolutePosition.X)
 
-                    -- Connect RenderStepped for smooth dragging
                     dragConnection = RunService.RenderStepped:Connect(function()
                         if not dragging then return end
                         local mousePos = UserInputService:GetMouseLocation()
