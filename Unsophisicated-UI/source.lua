@@ -1,3 +1,5 @@
+-- Unsophisicated UI - Ozen Drag Method with Shadows
+
 local Unsophisicated = {}
 
 function Unsophisicated:CreateWindow(windowName, buttonText)
@@ -34,42 +36,53 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
     ToggleCorner.CornerRadius = UDim.new(1, 0)
     ToggleCorner.Parent = ToggleButton
 
-    -- Smooth drag for toggle button (RenderStepped) - FIXED Vector2 conversion
-    local toggleDragging = false
-    local toggleDragStart, toggleStartPos
-    local toggleConnection
+    -- Shadow for toggle button
+    local ToggleShadow = Instance.new("Frame")
+    ToggleShadow.Name = "ToggleShadow"
+    ToggleShadow.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    ToggleShadow.BackgroundTransparency = 0.7
+    ToggleShadow.Size = UDim2.new(1, 6, 1, 6)
+    ToggleShadow.Position = UDim2.new(0, -3, 0, -3)
+    ToggleShadow.ZIndex = 9
+    ToggleShadow.Parent = ToggleButton
+    local ShadowCorner = Instance.new("UICorner")
+    ShadowCorner.CornerRadius = UDim.new(1, 0)
+    ShadowCorner.Parent = ToggleShadow
 
-    ToggleButton.InputBegan:Connect(function(input, processed)
+    -- Drag for toggle button (Ozen method)
+    local toggleDragging = false
+    local toggleDragStart
+    local toggleStartPos
+
+    local function updateToggle(input)
+        if not toggleDragging then return end
+        local delta = input.Position - toggleDragStart
+        ToggleButton.Position = UDim2.new(
+            toggleStartPos.X.Scale,
+            toggleStartPos.X.Offset + delta.X,
+            toggleStartPos.Y.Scale,
+            toggleStartPos.Y.Offset + delta.Y
+        )
+    end
+
+    local function onToggleInputBegan(input, processed)
         if processed then return end
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             toggleDragging = true
-            -- Convert input.Position (Vector3) to Vector2
-            toggleDragStart = Vector2.new(input.Position.X, input.Position.Y)
+            toggleDragStart = input.Position
             toggleStartPos = ToggleButton.Position
 
-            toggleConnection = RunService.RenderStepped:Connect(function()
-                if not toggleDragging then return end
-                local mousePos = UserInputService:GetMouseLocation() -- Vector2
-                local delta = mousePos - toggleDragStart
-                ToggleButton.Position = UDim2.new(
-                    toggleStartPos.X.Scale,
-                    toggleStartPos.X.Offset + delta.X,
-                    toggleStartPos.Y.Scale,
-                    toggleStartPos.Y.Offset + delta.Y
-                )
-            end)
-
-            input.Changed:Connect(function()
+            local conn
+            conn = input.Changed:Connect(function()
                 if input.UserInputState == Enum.UserInputState.End then
                     toggleDragging = false
-                    if toggleConnection then
-                        toggleConnection:Disconnect()
-                        toggleConnection = nil
-                    end
+                    conn:Disconnect()
                 end
             end)
         end
-    end)
+    end
+
+    ToggleButton.InputBegan:Connect(onToggleInputBegan)
 
     -- === MAIN WINDOW ===
     local MainFrame = Instance.new("Frame")
@@ -84,6 +97,19 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
     local MainCorner = Instance.new("UICorner")
     MainCorner.CornerRadius = UDim.new(0, 12)
     MainCorner.Parent = MainFrame
+
+    -- Shadow for main window
+    local Shadow = Instance.new("Frame")
+    Shadow.Name = "MainShadow"
+    Shadow.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    Shadow.BackgroundTransparency = 0.7
+    Shadow.Size = UDim2.new(1, 8, 1, 8)
+    Shadow.Position = UDim2.new(0, -4, 0, -4)
+    Shadow.ZIndex = -1
+    Shadow.Parent = MainFrame
+    local ShadowCornerMain = Instance.new("UICorner")
+    ShadowCornerMain.CornerRadius = UDim.new(0, 16)
+    ShadowCornerMain.Parent = Shadow
 
     -- Title Bar (only draggable part)
     local TitleBar = Instance.new("Frame")
@@ -117,39 +143,47 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
     Title.TextXAlignment = Enum.TextXAlignment.Left
     Title.Parent = TitleBar
 
-    -- Smooth drag for title bar (RenderStepped) - FIXED Vector2 conversion
+    -- Drag for main window (Ozen method, only via TitleBar)
     local mainDragging = false
-    local mainDragStart, mainStartPos
-    local mainConnection
+    local mainDragStart
+    local mainStartPos
 
-    TitleBar.InputBegan:Connect(function(input, processed)
+    local function updateMain(input)
+        if not mainDragging then return end
+        local delta = input.Position - mainDragStart
+        MainFrame.Position = UDim2.new(
+            mainStartPos.X.Scale,
+            mainStartPos.X.Offset + delta.X,
+            mainStartPos.Y.Scale,
+            mainStartPos.Y.Offset + delta.Y
+        )
+    end
+
+    local function onMainInputBegan(input, processed)
         if processed then return end
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             mainDragging = true
-            mainDragStart = Vector2.new(input.Position.X, input.Position.Y)
+            mainDragStart = input.Position
             mainStartPos = MainFrame.Position
 
-            mainConnection = RunService.RenderStepped:Connect(function()
-                if not mainDragging then return end
-                local mousePos = UserInputService:GetMouseLocation()
-                local delta = mousePos - mainDragStart
-                MainFrame.Position = UDim2.new(
-                    mainStartPos.X.Scale,
-                    mainStartPos.X.Offset + delta.X,
-                    mainStartPos.Y.Scale,
-                    mainStartPos.Y.Offset + delta.Y
-                )
-            end)
-
-            input.Changed:Connect(function()
+            local conn
+            conn = input.Changed:Connect(function()
                 if input.UserInputState == Enum.UserInputState.End then
                     mainDragging = false
-                    if mainConnection then
-                        mainConnection:Disconnect()
-                        mainConnection = nil
-                    end
+                    conn:Disconnect()
                 end
             end)
+        end
+    end
+
+    TitleBar.InputBegan:Connect(onMainInputBegan)
+
+    -- Global InputChanged to handle dragging
+    UserInputService.InputChanged:Connect(function(input, processed)
+        if processed then return end
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            updateToggle(input)
+            updateMain(input)
         end
     end)
 
@@ -460,7 +494,7 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
                             dragging = false
                             if dragConnection then
                                 dragConnection:Disconnect()
-                                dragConnection = nil
+                                dragConnection = nil 
                             end
                         end
                     end)
