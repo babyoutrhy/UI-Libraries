@@ -45,51 +45,38 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
     ShadowCorner.CornerRadius = UDim.new(1, 0)
     ShadowCorner.Parent = ToggleShadow
 
-    -- Smooth drag for toggle button using RenderStepped
-    local toggleDragStart, toggleStartPos, toggleDragging = nil, nil, false
-    local dragConnection = nil
-
-    local function updateTogglePosition(input)
-        if not toggleDragging then return end
-        local delta = input.Position - toggleDragStart
-        ToggleButton.Position = UDim2.new(
-            toggleStartPos.X.Scale,
-            toggleStartPos.X.Offset + delta.X,
-            toggleStartPos.Y.Scale,
-            toggleStartPos.Y.Offset + delta.Y
-        )
-    end
-
-    local function onToggleDrag(input)
-        if toggleDragging then
-            updateTogglePosition(input)
-        end
-    end
+    -- Smooth drag for toggle button
+    local toggleDragging = false
+    local toggleDragStartPos = nil
+    local toggleStartPosition = nil
+    local toggleDragConnection = nil
 
     ToggleButton.InputBegan:Connect(function(input, processed)
-        if not processed and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
+        if processed then return end
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             toggleDragging = true
-            toggleDragStart = input.Position
-            toggleStartPos = ToggleButton.Position
+            toggleDragStartPos = input.Position
+            toggleStartPosition = ToggleButton.Position
 
-            -- Use RenderStepped for smooth dragging
-            dragConnection = RunService.RenderStepped:Connect(function()
-                -- Get the last input position
-                local lastInput = UserInputService:GetLastInputType()
-                if lastInput == Enum.UserInputType.MouseMovement or lastInput == Enum.UserInputType.Touch then
-                    local mousePos = UserInputService:GetMouseLocation()
-                    -- Create a dummy input object with Position
-                    local dummyInput = {Position = mousePos}
-                    onToggleDrag(dummyInput)
-                end
+            -- Connect to RenderStepped for smooth polling
+            toggleDragConnection = RunService.RenderStepped:Connect(function()
+                if not toggleDragging then return end
+                local mousePos = UserInputService:GetMouseLocation()
+                local delta = mousePos - toggleDragStartPos
+                ToggleButton.Position = UDim2.new(
+                    toggleStartPosition.X.Scale,
+                    toggleStartPosition.X.Offset + delta.X,
+                    toggleStartPosition.Y.Scale,
+                    toggleStartPosition.Y.Offset + delta.Y
+                )
             end)
 
             input.Changed:Connect(function()
                 if input.UserInputState == Enum.UserInputState.End then
                     toggleDragging = false
-                    if dragConnection then
-                        dragConnection:Disconnect()
-                        dragConnection = nil
+                    if toggleDragConnection then
+                        toggleDragConnection:Disconnect()
+                        toggleDragConnection = nil
                     end
                 end
             end)
@@ -154,45 +141,34 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
     Title.TextXAlignment = Enum.TextXAlignment.Left
     Title.Parent = TitleBar
 
-    -- Drag for TitleBar only (smooth)
-    local dragStartPos, startPos, isDragging = nil, nil, false
+    -- Smooth drag for TitleBar only
+    local mainDragging = false
+    local mainDragStartPos = nil
+    local mainStartPosition = nil
     local mainDragConnection = nil
 
-    local function updateMainPosition(input)
-        if not isDragging then return end
-        local delta = input.Position - dragStartPos
-        MainFrame.Position = UDim2.new(
-            startPos.X.Scale,
-            startPos.X.Offset + delta.X,
-            startPos.Y.Scale,
-            startPos.Y.Offset + delta.Y
-        )
-    end
-
-    local function onMainDrag(input)
-        if isDragging then
-            updateMainPosition(input)
-        end
-    end
-
     TitleBar.InputBegan:Connect(function(input, processed)
-        if not processed and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
-            isDragging = true
-            dragStartPos = input.Position
-            startPos = MainFrame.Position
+        if processed then return end
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            mainDragging = true
+            mainDragStartPos = input.Position
+            mainStartPosition = MainFrame.Position
 
             mainDragConnection = RunService.RenderStepped:Connect(function()
-                local lastInput = UserInputService:GetLastInputType()
-                if lastInput == Enum.UserInputType.MouseMovement or lastInput == Enum.UserInputType.Touch then
-                    local mousePos = UserInputService:GetMouseLocation()
-                    local dummyInput = {Position = mousePos}
-                    onMainDrag(dummyInput)
-                end
+                if not mainDragging then return end
+                local mousePos = UserInputService:GetMouseLocation()
+                local delta = mousePos - mainDragStartPos
+                MainFrame.Position = UDim2.new(
+                    mainStartPosition.X.Scale,
+                    mainStartPosition.X.Offset + delta.X,
+                    mainStartPosition.Y.Scale,
+                    mainStartPosition.Y.Offset + delta.Y
+                )
             end)
 
             input.Changed:Connect(function()
                 if input.UserInputState == Enum.UserInputState.End then
-                    isDragging = false
+                    mainDragging = false
                     if mainDragConnection then
                         mainDragConnection:Disconnect()
                         mainDragConnection = nil
