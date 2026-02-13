@@ -8,26 +8,56 @@ function Unsophisicated:CreateWindow(name)
 
     -- Main GUI
     local ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Name = "UnsophisicatedUI"
+    ScreenGui.Name = "UnsophisicatedUI_Neon"
     ScreenGui.Parent = game.CoreGui
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     ScreenGui.ResetOnSpawn = false
+    
+    local ToggleButton = Instance.new("TextButton")
+    ToggleButton.Name = "ToggleButton"
+    ToggleButton.BackgroundColor3 = Color3.fromRGB(120, 80, 200) -- purple accent
+    ToggleButton.Size = UDim2.new(0, 50, 0, 50)
+    ToggleButton.Position = UDim2.new(0.5, -25, 0, 15) -- top center
+    ToggleButton.Font = Enum.Font.GothamBold
+    ToggleButton.Text = "☰" -- hamburger icon (or use "≡")
+    ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    ToggleButton.TextSize = 30
+    ToggleButton.ZIndex = 10
+    ToggleButton.Parent = ScreenGui
 
-    -- Main Window with glass effect
+    -- Rounded corners for toggle button
+    local ToggleCorner = Instance.new("UICorner")
+    ToggleCorner.CornerRadius = UDim.new(1, 0) -- circle
+    ToggleCorner.Parent = ToggleButton
+
+    -- Subtle shadow
+    local ToggleShadow = Instance.new("Frame")
+    ToggleShadow.Name = "Shadow"
+    ToggleShadow.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    ToggleShadow.BackgroundTransparency = 0.7
+    ToggleShadow.Size = UDim2.new(1, 6, 1, 6)
+    ToggleShadow.Position = UDim2.new(0, -3, 0, -3)
+    ToggleShadow.ZIndex = 9
+    ToggleShadow.Parent = ToggleButton
+    local ShadowCorner = Instance.new("UICorner")
+    ShadowCorner.CornerRadius = UDim.new(1, 0)
+    ShadowCorner.Parent = ToggleShadow
+
+    -- === MAIN WINDOW ===
     local MainFrame = Instance.new("Frame")
     MainFrame.Name = "MainFrame"
-    MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 30) -- deep dark blue-gray
+    MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
     MainFrame.BorderSizePixel = 0
     MainFrame.Position = UDim2.new(0.3, 0, 0.3, 0)
-    MainFrame.Size = UDim2.new(0, 380, 0, 450) -- slightly larger
+    MainFrame.Size = UDim2.new(0, 380, 0, 450)
+    MainFrame.Visible = true -- start visible
     MainFrame.Parent = ScreenGui
 
-    -- Rounded corners for the whole window
     local MainCorner = Instance.new("UICorner")
     MainCorner.CornerRadius = UDim.new(0, 12)
     MainCorner.Parent = MainFrame
 
-    -- Optional subtle shadow (using a frame behind)
+    -- Shadow for main window
     local Shadow = Instance.new("Frame")
     Shadow.Name = "Shadow"
     Shadow.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
@@ -36,11 +66,11 @@ function Unsophisicated:CreateWindow(name)
     Shadow.Position = UDim2.new(0, -4, 0, -4)
     Shadow.ZIndex = -1
     Shadow.Parent = MainFrame
-    local ShadowCorner = Instance.new("UICorner")
-    ShadowCorner.CornerRadius = UDim.new(0, 16)
-    ShadowCorner.Parent = Shadow
+    local ShadowCornerMain = Instance.new("UICorner")
+    ShadowCornerMain.CornerRadius = UDim.new(0, 16)
+    ShadowCornerMain.Parent = Shadow
 
-    -- Title Bar with gradient
+    -- Title Bar
     local TitleBar = Instance.new("Frame")
     TitleBar.Name = "TitleBar"
     TitleBar.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
@@ -51,9 +81,7 @@ function Unsophisicated:CreateWindow(name)
     local TitleBarCorner = Instance.new("UICorner")
     TitleBarCorner.CornerRadius = UDim.new(0, 12)
     TitleBarCorner.Parent = TitleBar
-    -- Only round top corners, so we need to mask bottom? We'll use a separate frame for content area later.
 
-    -- Gradient for title bar
     local Gradient = Instance.new("UIGradient")
     Gradient.Color = ColorSequence.new({
         ColorSequenceKeypoint.new(0, Color3.fromRGB(40, 40, 60)),
@@ -74,18 +102,7 @@ function Unsophisicated:CreateWindow(name)
     Title.TextXAlignment = Enum.TextXAlignment.Left
     Title.Parent = TitleBar
 
-    local CloseButton = Instance.new("TextButton")
-    CloseButton.Name = "CloseButton"
-    CloseButton.BackgroundTransparency = 1
-    CloseButton.Position = UDim2.new(1, -40, 0, 0)
-    CloseButton.Size = UDim2.new(0, 40, 1, 0)
-    CloseButton.Font = Enum.Font.GothamBold
-    CloseButton.Text = "✕"
-    CloseButton.TextColor3 = Color3.fromRGB(200, 200, 220)
-    CloseButton.TextSize = 18
-    CloseButton.Parent = TitleBar
-
-    -- Mobile-compatible drag functionality (same as before)
+    -- Drag functionality (same as before, attached to MainFrame and TitleBar)
     local dragStartPos
     local startPos
     local isDragging = false
@@ -127,7 +144,7 @@ function Unsophisicated:CreateWindow(name)
     MainFrame.InputBegan:Connect(onInputBegan)
     TitleBar.InputBegan:Connect(onInputBegan)
 
-    -- Tab Bar (now as a set of pill-shaped buttons)
+    -- Tab Bar
     local TabBar = Instance.new("Frame")
     TabBar.Name = "TabBar"
     TabBar.BackgroundTransparency = 1
@@ -141,7 +158,7 @@ function Unsophisicated:CreateWindow(name)
     TabBarLayout.SortOrder = Enum.SortOrder.LayoutOrder
     TabBarLayout.Padding = UDim.new(0, 8)
 
-    -- Content Area (with background)
+    -- Content Area
     local ContentArea = Instance.new("Frame")
     ContentArea.Name = "ContentArea"
     ContentArea.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
@@ -154,31 +171,37 @@ function Unsophisicated:CreateWindow(name)
     ContentCorner.CornerRadius = UDim.new(0, 8)
     ContentCorner.Parent = ContentArea
 
-    CloseButton.MouseButton1Click:Connect(function()
-        ScreenGui:Destroy()
+    -- Toggle functionality
+    ToggleButton.MouseButton1Click:Connect(function()
+        MainFrame.Visible = not MainFrame.Visible
+        -- Optional: animate toggle button when window hidden/shown?
+        if MainFrame.Visible then
+            TweenService:Create(ToggleButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(120, 80, 200)}):Play()
+        else
+            TweenService:Create(ToggleButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(80, 60, 150)}):Play()
+        end
     end)
 
+    -- Helper function to create elements (same as before)
     local function CreateElement(name, height)
         local Element = Instance.new("Frame")
         Element.Name = name
         Element.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
         Element.BorderSizePixel = 0
-        Element.Size = UDim2.new(1, -10, 0, height) -- margin inside content area
+        Element.Size = UDim2.new(1, -10, 0, height)
         
         local Corner = Instance.new("UICorner")
         Corner.CornerRadius = UDim.new(0, 6)
         Corner.Parent = Element
         
-        -- subtle inner glow/shadow could be added, but keep simple
         return Element
     end
 
     local Window = {}
     local currentTab = nil
-    local tabs = {} -- store tab buttons and content
 
     function Window:AddTab(tabName)
-        -- Create Tab Button (pill style)
+        -- Tab Button
         local TabButton = Instance.new("TextButton")
         TabButton.Name = tabName
         TabButton.BackgroundColor3 = Color3.fromRGB(45, 45, 60)
@@ -192,10 +215,10 @@ function Unsophisicated:CreateWindow(name)
         TabButton.Parent = TabBar
 
         local ButtonCorner = Instance.new("UICorner")
-        ButtonCorner.CornerRadius = UDim.new(1, 0) -- fully rounded
+        ButtonCorner.CornerRadius = UDim.new(1, 0)
         ButtonCorner.Parent = TabButton
 
-        -- Create Tab Content (ScrollingFrame inside ContentArea)
+        -- Tab Content
         local TabContent = Instance.new("ScrollingFrame")
         TabContent.Name = tabName
         TabContent.BackgroundTransparency = 1
@@ -213,15 +236,13 @@ function Unsophisicated:CreateWindow(name)
         TabContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
         TabContentLayout.Padding = UDim.new(0, 8)
 
-        -- Set first tab as active
         if not currentTab then
             currentTab = TabContent
             TabContent.Visible = true
-            TabButton.BackgroundColor3 = Color3.fromRGB(120, 80, 200) -- purple accent
+            TabButton.BackgroundColor3 = Color3.fromRGB(120, 80, 200)
             TabButton.TextColor3 = Color3.fromRGB(255, 255, 255)
         end
 
-        -- Tab switching logic
         TabButton.MouseButton1Click:Connect(function()
             if currentTab == TabContent then return end
             currentTab.Visible = false
@@ -246,7 +267,7 @@ function Unsophisicated:CreateWindow(name)
 
             local Button = Instance.new("TextButton")
             Button.Name = "Action"
-            Button.BackgroundColor3 = Color3.fromRGB(100, 70, 180) -- purple
+            Button.BackgroundColor3 = Color3.fromRGB(100, 70, 180)
             Button.Size = UDim2.new(1, -20, 1, -10)
             Button.Position = UDim2.new(0, 10, 0, 5)
             Button.Font = Enum.Font.GothamBold
@@ -259,7 +280,6 @@ function Unsophisicated:CreateWindow(name)
             ButtonCorner.CornerRadius = UDim.new(0, 6)
             ButtonCorner.Parent = Button
 
-            -- Hover effect
             Button.MouseEnter:Connect(function()
                 TweenService:Create(Button, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(130, 90, 210)}):Play()
             end)
@@ -291,7 +311,6 @@ function Unsophisicated:CreateWindow(name)
             ToggleTitle.TextXAlignment = Enum.TextXAlignment.Left
             ToggleTitle.Parent = ToggleElement
 
-            -- Modern toggle switch (rounded rectangle with circle)
             local ToggleContainer = Instance.new("Frame")
             ToggleContainer.Name = "Container"
             ToggleContainer.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
