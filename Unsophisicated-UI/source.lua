@@ -2,7 +2,7 @@ local Unsophisicated = {}
 
 function Unsophisicated:CreateWindow(windowName, buttonText)
     buttonText = buttonText or windowName or "Menu"
-    
+
     local UserInputService = game:GetService("UserInputService")
     local TweenService = game:GetService("TweenService")
     local TextService = game:GetService("TextService")
@@ -14,9 +14,9 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     ScreenGui.ResetOnSpawn = false
 
-    -- === DRAGGABLE TOGGLE BUTTON ===
+    -- === TOGGLE BUTTON (draggable, custom text) ===
     local buttonWidth = TextService:GetTextSize(buttonText, 20, Enum.Font.GothamBold, Vector2.new(0, 0)).X + 40
-    local buttonHeight = 45
+    local buttonHeight = 50 -- slightly taller for easier touch
     local ToggleButton = Instance.new("TextButton")
     ToggleButton.Name = "ToggleButton"
     ToggleButton.BackgroundColor3 = Color3.fromRGB(120, 80, 200)
@@ -27,12 +27,15 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
     ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
     ToggleButton.TextSize = 20
     ToggleButton.ZIndex = 10
+    ToggleButton.AutoButtonColor = false
     ToggleButton.Parent = ScreenGui
 
+    -- Rounded pill shape
     local ToggleCorner = Instance.new("UICorner")
     ToggleCorner.CornerRadius = UDim.new(1, 0)
     ToggleCorner.Parent = ToggleButton
 
+    -- Shadow effect
     local ToggleShadow = Instance.new("Frame")
     ToggleShadow.Name = "Shadow"
     ToggleShadow.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
@@ -45,43 +48,47 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
     ShadowCorner.CornerRadius = UDim.new(1, 0)
     ShadowCorner.Parent = ToggleShadow
 
-    -- Smooth drag for toggle button
-    local toggleDragging = false
-    local toggleDragStartPos = nil
-    local toggleStartPosition = nil
-    local toggleDragConnection = nil
+    -- === DRAG HANDLER (reusable) ===
+    local function makeDraggable(dragHandle, targetFrame)
+        local dragging = false
+        local dragStart, startPos
 
-    ToggleButton.InputBegan:Connect(function(input, processed)
-        if processed then return end
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            toggleDragging = true
-            toggleDragStartPos = input.Position
-            toggleStartPosition = ToggleButton.Position
-
-            -- Connect to RenderStepped for smooth polling
-            toggleDragConnection = RunService.RenderStepped:Connect(function()
-                if not toggleDragging then return end
-                local mousePos = UserInputService:GetMouseLocation()
-                local delta = mousePos - toggleDragStartPos
-                ToggleButton.Position = UDim2.new(
-                    toggleStartPosition.X.Scale,
-                    toggleStartPosition.X.Offset + delta.X,
-                    toggleStartPosition.Y.Scale,
-                    toggleStartPosition.Y.Offset + delta.Y
-                )
-            end)
-
-            input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    toggleDragging = false
-                    if toggleDragConnection then
-                        toggleDragConnection:Disconnect()
-                        toggleDragConnection = nil
-                    end
-                end
-            end)
+        local function updatePosition(input)
+            if not dragging then return end
+            local delta = input.Position - dragStart
+            targetFrame.Position = UDim2.new(
+                startPos.X.Scale,
+                startPos.X.Offset + delta.X,
+                startPos.Y.Scale,
+                startPos.Y.Offset + delta.Y
+            )
         end
-    end)
+
+        dragHandle.InputBegan:Connect(function(input, processed)
+            if processed then return end
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                dragging = true
+                dragStart = input.Position
+                startPos = targetFrame.Position
+
+                input.Changed:Connect(function()
+                    if input.UserInputState == Enum.UserInputState.End then
+                        dragging = false
+                    end
+                end)
+            end
+        end)
+
+        UserInputService.InputChanged:Connect(function(input, processed)
+            if not dragging or processed then return end
+            if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+                updatePosition(input)
+            end
+        end)
+    end
+
+    -- Make toggle button draggable
+    makeDraggable(ToggleButton, ToggleButton)
 
     -- === MAIN WINDOW ===
     local MainFrame = Instance.new("Frame")
@@ -89,25 +96,14 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
     MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
     MainFrame.BorderSizePixel = 0
     MainFrame.Position = UDim2.new(0.3, 0, 0.3, 0)
-    MainFrame.Size = UDim2.new(0, 380, 0, 450)
+    MainFrame.Size = UDim2.new(0, 400, 0, 450) -- slightly wider
     MainFrame.Visible = true
     MainFrame.Parent = ScreenGui
 
+    -- Rounded corners
     local MainCorner = Instance.new("UICorner")
     MainCorner.CornerRadius = UDim.new(0, 12)
     MainCorner.Parent = MainFrame
-
-    local Shadow = Instance.new("Frame")
-    Shadow.Name = "Shadow"
-    Shadow.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    Shadow.BackgroundTransparency = 0.7
-    Shadow.Size = UDim2.new(1, 8, 1, 8)
-    Shadow.Position = UDim2.new(0, -4, 0, -4)
-    Shadow.ZIndex = -1
-    Shadow.Parent = MainFrame
-    local ShadowCornerMain = Instance.new("UICorner")
-    ShadowCornerMain.CornerRadius = UDim.new(0, 16)
-    ShadowCornerMain.Parent = Shadow
 
     -- Title Bar (only draggable part)
     local TitleBar = Instance.new("Frame")
@@ -121,6 +117,7 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
     TitleBarCorner.CornerRadius = UDim.new(0, 12)
     TitleBarCorner.Parent = TitleBar
 
+    -- Gradient on title bar
     local Gradient = Instance.new("UIGradient")
     Gradient.Color = ColorSequence.new({
         ColorSequenceKeypoint.new(0, Color3.fromRGB(40, 40, 60)),
@@ -141,49 +138,15 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
     Title.TextXAlignment = Enum.TextXAlignment.Left
     Title.Parent = TitleBar
 
-    -- Smooth drag for TitleBar only
-    local mainDragging = false
-    local mainDragStartPos = nil
-    local mainStartPosition = nil
-    local mainDragConnection = nil
-
-    TitleBar.InputBegan:Connect(function(input, processed)
-        if processed then return end
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            mainDragging = true
-            mainDragStartPos = input.Position
-            mainStartPosition = MainFrame.Position
-
-            mainDragConnection = RunService.RenderStepped:Connect(function()
-                if not mainDragging then return end
-                local mousePos = UserInputService:GetMouseLocation()
-                local delta = mousePos - mainDragStartPos
-                MainFrame.Position = UDim2.new(
-                    mainStartPosition.X.Scale,
-                    mainStartPosition.X.Offset + delta.X,
-                    mainStartPosition.Y.Scale,
-                    mainStartPosition.Y.Offset + delta.Y
-                )
-            end)
-
-            input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    mainDragging = false
-                    if mainDragConnection then
-                        mainDragConnection:Disconnect()
-                        mainDragConnection = nil
-                    end
-                end
-            end)
-        end
-    end)
+    -- Make title bar drag the main window
+    makeDraggable(TitleBar, MainFrame)
 
     -- Tab Bar
     local TabBar = Instance.new("Frame")
     TabBar.Name = "TabBar"
     TabBar.BackgroundTransparency = 1
     TabBar.Position = UDim2.new(0, 10, 0, 50)
-    TabBar.Size = UDim2.new(1, -20, 0, 35)
+    TabBar.Size = UDim2.new(1, -20, 0, 40)
     TabBar.Parent = MainFrame
 
     local TabBarLayout = Instance.new("UIListLayout")
@@ -197,25 +160,23 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
     ContentArea.Name = "ContentArea"
     ContentArea.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
     ContentArea.BorderSizePixel = 0
-    ContentArea.Position = UDim2.new(0, 10, 0, 95)
-    ContentArea.Size = UDim2.new(1, -20, 1, -105)
+    ContentArea.Position = UDim2.new(0, 10, 0, 100)
+    ContentArea.Size = UDim2.new(1, -20, 1, -110)
     ContentArea.Parent = MainFrame
 
     local ContentCorner = Instance.new("UICorner")
     ContentCorner.CornerRadius = UDim.new(0, 8)
     ContentCorner.Parent = ContentArea
 
-    -- Toggle functionality
+    -- Toggle button click to show/hide main window
     ToggleButton.MouseButton1Click:Connect(function()
         MainFrame.Visible = not MainFrame.Visible
-        if MainFrame.Visible then
-            TweenService:Create(ToggleButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(120, 80, 200)}):Play()
-        else
-            TweenService:Create(ToggleButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(80, 60, 150)}):Play()
-        end
+        -- Slight color change to indicate state
+        local targetColor = MainFrame.Visible and Color3.fromRGB(120, 80, 200) or Color3.fromRGB(80, 60, 150)
+        TweenService:Create(ToggleButton, TweenInfo.new(0.2), {BackgroundColor3 = targetColor}):Play()
     end)
 
-    -- Helper function to create elements
+    -- Helper to create element frames
     local function CreateElement(name, height)
         local Element = Instance.new("Frame")
         Element.Name = name
@@ -234,6 +195,7 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
     local currentTab = nil
 
     function Window:AddTab(tabName)
+        -- Tab button
         local TabButton = Instance.new("TextButton")
         TabButton.Name = tabName
         TabButton.BackgroundColor3 = Color3.fromRGB(45, 45, 60)
@@ -250,6 +212,7 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
         ButtonCorner.CornerRadius = UDim.new(1, 0)
         ButtonCorner.Parent = TabButton
 
+        -- Tab content (scrolling frame)
         local TabContent = Instance.new("ScrollingFrame")
         TabContent.Name = tabName
         TabContent.BackgroundTransparency = 1
@@ -292,9 +255,9 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
         local Tab = {}
 
         function Tab:AddButton(config)
-            local ButtonElement = CreateElement("Button", 40)
-            ButtonElement.LayoutOrder = #TabContent:GetChildren()
-            ButtonElement.Parent = TabContent
+            local Element = CreateElement("Button", 40)
+            Element.LayoutOrder = #TabContent:GetChildren()
+            Element.Parent = TabContent
 
             local Button = Instance.new("TextButton")
             Button.Name = "Action"
@@ -305,12 +268,13 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
             Button.Text = config.Text
             Button.TextColor3 = Color3.fromRGB(255, 255, 255)
             Button.TextSize = 14
-            Button.Parent = ButtonElement
+            Button.Parent = Element
 
             local ButtonCorner = Instance.new("UICorner")
             ButtonCorner.CornerRadius = UDim.new(0, 6)
             ButtonCorner.Parent = Button
 
+            -- Hover effect
             Button.MouseEnter:Connect(function()
                 TweenService:Create(Button, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(130, 90, 210)}):Play()
             end)
@@ -318,94 +282,88 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
                 TweenService:Create(Button, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(100, 70, 180)}):Play()
             end)
 
-            Button.MouseButton1Click:Connect(function()
-                if config.Callback then
-                    config.Callback()
-                end
-            end)
+            Button.MouseButton1Click:Connect(config.Callback or function() end)
         end
 
         function Tab:AddToggle(config)
-            local ToggleElement = CreateElement("Toggle", 40)
-            ToggleElement.LayoutOrder = #TabContent:GetChildren()
-            ToggleElement.Parent = TabContent
+            local Element = CreateElement("Toggle", 40)
+            Element.LayoutOrder = #TabContent:GetChildren()
+            Element.Parent = TabContent
 
-            local ToggleTitle = Instance.new("TextLabel")
-            ToggleTitle.Name = "Title"
-            ToggleTitle.BackgroundTransparency = 1
-            ToggleTitle.Position = UDim2.new(0, 15, 0, 0)
-            ToggleTitle.Size = UDim2.new(0, 200, 1, 0)
-            ToggleTitle.Font = Enum.Font.Gotham
-            ToggleTitle.Text = config.Text
-            ToggleTitle.TextColor3 = Color3.fromRGB(220, 220, 240)
-            ToggleTitle.TextSize = 14
-            ToggleTitle.TextXAlignment = Enum.TextXAlignment.Left
-            ToggleTitle.Parent = ToggleElement
+            local Label = Instance.new("TextLabel")
+            Label.Name = "Title"
+            Label.BackgroundTransparency = 1
+            Label.Position = UDim2.new(0, 15, 0, 0)
+            Label.Size = UDim2.new(0, 200, 1, 0)
+            Label.Font = Enum.Font.Gotham
+            Label.Text = config.Text
+            Label.TextColor3 = Color3.fromRGB(220, 220, 240)
+            Label.TextSize = 14
+            Label.TextXAlignment = Enum.TextXAlignment.Left
+            Label.Parent = Element
 
             local ToggleContainer = Instance.new("Frame")
             ToggleContainer.Name = "Container"
             ToggleContainer.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
             ToggleContainer.Position = UDim2.new(1, -70, 0.5, -12)
             ToggleContainer.Size = UDim2.new(0, 50, 0, 24)
-            ToggleContainer.Parent = ToggleElement
+            ToggleContainer.Parent = Element
 
             local ContainerCorner = Instance.new("UICorner")
             ContainerCorner.CornerRadius = UDim.new(1, 0)
             ContainerCorner.Parent = ToggleContainer
 
-            local ToggleIndicator = Instance.new("Frame")
-            ToggleIndicator.Name = "Indicator"
-            ToggleIndicator.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-            ToggleIndicator.BorderSizePixel = 0
-            ToggleIndicator.Size = UDim2.new(0, 20, 0, 20)
-            ToggleIndicator.Position = UDim2.new(0, 2, 0.5, -10)
-            ToggleIndicator.Parent = ToggleContainer
+            local Indicator = Instance.new("Frame")
+            Indicator.Name = "Indicator"
+            Indicator.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            Indicator.BorderSizePixel = 0
+            Indicator.Size = UDim2.new(0, 20, 0, 20)
+            Indicator.Position = UDim2.new(0, 2, 0.5, -10)
+            Indicator.Parent = ToggleContainer
 
             local IndicatorCorner = Instance.new("UICorner")
             IndicatorCorner.CornerRadius = UDim.new(1, 0)
-            IndicatorCorner.Parent = ToggleIndicator
+            IndicatorCorner.Parent = Indicator
 
-            local ToggleState = config.Default or false
+            local state = config.Default or false
 
-            local function updateToggle()
-                if ToggleState then
-                    TweenService:Create(ToggleIndicator, TweenInfo.new(0.2), {Position = UDim2.new(1, -22, 0.5, -10)}):Play()
+            local function update()
+                if state then
+                    TweenService:Create(Indicator, TweenInfo.new(0.2), {Position = UDim2.new(1, -22, 0.5, -10)}):Play()
                     TweenService:Create(ToggleContainer, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(140, 100, 230)}):Play()
                 else
-                    TweenService:Create(ToggleIndicator, TweenInfo.new(0.2), {Position = UDim2.new(0, 2, 0.5, -10)}):Play()
+                    TweenService:Create(Indicator, TweenInfo.new(0.2), {Position = UDim2.new(0, 2, 0.5, -10)}):Play()
                     TweenService:Create(ToggleContainer, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(60, 60, 80)}):Play()
                 end
             end
-
-            updateToggle()
+            update()
 
             ToggleContainer.InputBegan:Connect(function(input, processed)
-                if not processed and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
-                    ToggleState = not ToggleState
-                    updateToggle()
-                    if config.Callback then
-                        config.Callback(ToggleState)
-                    end
+                if processed then return end
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    state = not state
+                    update()
+                    if config.Callback then config.Callback(state) end
                 end
             end)
         end
 
         function Tab:AddSlider(config)
-            local SliderElement = CreateElement("Slider", 55)
-            SliderElement.LayoutOrder = #TabContent:GetChildren()
-            SliderElement.Parent = TabContent
+            local Element = CreateElement("Slider", 55)
+            Element.LayoutOrder = #TabContent:GetChildren()
+            Element.Parent = TabContent
 
-            local SliderTitle = Instance.new("TextLabel")
-            SliderTitle.Name = "Title"
-            SliderTitle.BackgroundTransparency = 1
-            SliderTitle.Position = UDim2.new(0, 15, 0, 8)
-            SliderTitle.Size = UDim2.new(0, 200, 0, 20)
-            SliderTitle.Font = Enum.Font.Gotham
-            SliderTitle.Text = config.Text
-            SliderTitle.TextColor3 = Color3.fromRGB(220, 220, 240)
-            SliderTitle.TextSize = 14
-            SliderTitle.TextXAlignment = Enum.TextXAlignment.Left
-            SliderTitle.Parent = SliderElement
+            local Label = Instance.new("TextLabel")
+            Label.Name = "Title"
+            Label.BackgroundTransparency = 1
+            Label.Position = UDim2.new(0, 15, 0, 8)
+            Label.Size = UDim2.new(0, 200, 0, 20)
+            Label.Font = Enum.Font.Gotham
+            Label.Text = config.Text
+            Label.TextColor3 = Color3.fromRGB(220, 220, 240)
+            Label.TextSize = 14
+            Label.TextXAlignment = Enum.TextXAlignment.Left
+            Label.Parent = Element
 
             local ValueDisplay = Instance.new("TextLabel")
             ValueDisplay.Name = "Value"
@@ -417,14 +375,14 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
             ValueDisplay.TextColor3 = Color3.fromRGB(180, 150, 255)
             ValueDisplay.TextSize = 14
             ValueDisplay.TextXAlignment = Enum.TextXAlignment.Right
-            ValueDisplay.Parent = SliderElement
+            ValueDisplay.Parent = Element
 
             local Track = Instance.new("Frame")
             Track.Name = "Track"
             Track.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
             Track.Position = UDim2.new(0, 15, 0, 32)
             Track.Size = UDim2.new(1, -30, 0, 6)
-            Track.Parent = SliderElement
+            Track.Parent = Element
 
             local TrackCorner = Instance.new("UICorner")
             TrackCorner.CornerRadius = UDim.new(1, 0)
@@ -454,58 +412,51 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
             local min = config.Min or 0
             local max = config.Max or 100
             local step = config.Step or 1
-            local currentValue = config.Default or min
-            local isDragging = false
+            local value = config.Default or min
+            local dragging = false
 
-            local function updateValue(inputPos)
+            local function updateValueFromPos(inputPos)
                 local trackSize = Track.AbsoluteSize.X
                 if trackSize == 0 then return end
-                local relativePos = math.clamp(inputPos, 0, trackSize)
-                local valueRange = max - min
-                local rawValue = min + (relativePos / trackSize) * valueRange
-                currentValue = math.floor((rawValue - min) / step + 0.5) * step + min
-                currentValue = math.clamp(currentValue, min, max)
+                local rel = math.clamp(inputPos, 0, trackSize)
+                local range = max - min
+                local raw = min + (rel / trackSize) * range
+                value = math.floor((raw - min) / step + 0.5) * step + min
+                value = math.clamp(value, min, max)
 
-                local fillWidth = (currentValue - min) / valueRange * trackSize
-                Fill.Size = UDim2.new(0, fillWidth, 1, 0)
-                Thumb.Position = UDim2.new(0, fillWidth - 8, 0.5, -8)
-                ValueDisplay.Text = tostring(currentValue)
+                local fill = (value - min) / range * trackSize
+                Fill.Size = UDim2.new(0, fill, 1, 0)
+                Thumb.Position = UDim2.new(0, fill - 8, 0.5, -8)
+                ValueDisplay.Text = tostring(value)
 
-                if config.Callback then
-                    config.Callback(currentValue)
-                end
+                if config.Callback then config.Callback(value) end
             end
 
-            local function inputChanged(input)
-                if isDragging then
-                    local mousePos = input.Position.X - Track.AbsolutePosition.X
-                    updateValue(mousePos)
-                end
-            end
-
-            Track.InputBegan:Connect(function(input)
+            Track.InputBegan:Connect(function(input, processed)
+                if processed then return end
                 if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                    isDragging = true
-                    updateValue(input.Position.X - Track.AbsolutePosition.X)
+                    dragging = true
+                    updateValueFromPos(input.Position.X - Track.AbsolutePosition.X)
+
+                    input.Changed:Connect(function()
+                        if input.UserInputState == Enum.UserInputState.End then
+                            dragging = false
+                        end
+                    end)
                 end
             end)
 
-            UserInputService.InputChanged:Connect(function(input)
+            UserInputService.InputChanged:Connect(function(input, processed)
+                if not dragging or processed then return end
                 if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-                    inputChanged(input)
+                    updateValueFromPos(input.Position.X - Track.AbsolutePosition.X)
                 end
             end)
 
-            UserInputService.InputEnded:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                    isDragging = false
-                end
-            end)
-
-            -- Set initial value
-            local initialFill = ((currentValue - min) / (max - min)) * Track.AbsoluteSize.X
-            Fill.Size = UDim2.new(0, initialFill, 1, 0)
-            Thumb.Position = UDim2.new(0, initialFill - 8, 0.5, -8)
+            -- initial value
+            local initFill = ((value - min) / (max - min)) * Track.AbsoluteSize.X
+            Fill.Size = UDim2.new(0, initFill, 1, 0)
+            Thumb.Position = UDim2.new(0, initFill - 8, 0.5, -8)
         end
 
         return Tab
