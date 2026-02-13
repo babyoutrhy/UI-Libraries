@@ -1,6 +1,9 @@
 local Unsophisicated = {}
 
-function Unsophisicated:CreateWindow(name)
+function Unsophisicated:CreateWindow(windowName, buttonText)
+    -- If buttonText not provided, use windowName or default to "Menu"
+    buttonText = buttonText or windowName or "Menu"
+    
     local UserInputService = game:GetService("UserInputService")
     local TweenService = game:GetService("TweenService")
     local TextService = game:GetService("TextService")
@@ -8,26 +11,29 @@ function Unsophisicated:CreateWindow(name)
 
     -- Main GUI
     local ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Name = "UnsophisicatedUI_Neon"
+    ScreenGui.Name = "UnsophisicatedUI"
     ScreenGui.Parent = game.CoreGui
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     ScreenGui.ResetOnSpawn = false
-    
+
+    -- === TOP CENTER TOGGLE BUTTON (draggable, with custom text) ===
+    local buttonWidth = TextService:GetTextSize(buttonText, 20, Enum.Font.GothamBold, Vector2.new(0, 0)).X + 40 -- padding
+    local buttonHeight = 45
     local ToggleButton = Instance.new("TextButton")
     ToggleButton.Name = "ToggleButton"
-    ToggleButton.BackgroundColor3 = Color3.fromRGB(120, 80, 200) -- purple accent
-    ToggleButton.Size = UDim2.new(0, 50, 0, 50)
-    ToggleButton.Position = UDim2.new(0.5, -25, 0, 15) -- top center
+    ToggleButton.BackgroundColor3 = Color3.fromRGB(120, 80, 200)
+    ToggleButton.Size = UDim2.new(0, buttonWidth, 0, buttonHeight)
+    ToggleButton.Position = UDim2.new(0.5, -buttonWidth/2, 0, 15) -- top center
     ToggleButton.Font = Enum.Font.GothamBold
-    ToggleButton.Text = "☰" -- hamburger icon (or use "≡")
+    ToggleButton.Text = buttonText
     ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    ToggleButton.TextSize = 30
+    ToggleButton.TextSize = 20
     ToggleButton.ZIndex = 10
     ToggleButton.Parent = ScreenGui
 
-    -- Rounded corners for toggle button
+    -- Rounded corners (pill shape)
     local ToggleCorner = Instance.new("UICorner")
-    ToggleCorner.CornerRadius = UDim.new(1, 0) -- circle
+    ToggleCorner.CornerRadius = UDim.new(1, 0) -- fully rounded ends
     ToggleCorner.Parent = ToggleButton
 
     -- Subtle shadow
@@ -43,6 +49,46 @@ function Unsophisicated:CreateWindow(name)
     ShadowCorner.CornerRadius = UDim.new(1, 0)
     ShadowCorner.Parent = ToggleShadow
 
+    -- Drag variables for toggle button
+    local toggleDragStart, toggleStartPos, toggleDragging = nil, nil, false
+
+    local function updateToggleInput(input)
+        local delta = input.Position - toggleDragStart
+        ToggleButton.Position = UDim2.new(
+            toggleStartPos.X.Scale,
+            toggleStartPos.X.Offset + delta.X,
+            toggleStartPos.Y.Scale,
+            toggleStartPos.Y.Offset + delta.Y
+        )
+    end
+
+    local function onToggleInputBegan(input, processed)
+        if not processed and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
+            toggleDragging = true
+            toggleDragStart = input.Position
+            toggleStartPos = ToggleButton.Position
+
+            local conn
+            conn = input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    toggleDragging = false
+                    conn:Disconnect()
+                end
+            end)
+        end
+    end
+
+    ToggleButton.InputBegan:Connect(onToggleInputBegan)
+
+    -- Connect to InputChanged for dragging
+    UserInputService.InputChanged:Connect(function(input, processed)
+        if toggleDragging and not processed then
+            if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+                updateToggleInput(input)
+            end
+        end
+    end)
+
     -- === MAIN WINDOW ===
     local MainFrame = Instance.new("Frame")
     MainFrame.Name = "MainFrame"
@@ -50,14 +96,13 @@ function Unsophisicated:CreateWindow(name)
     MainFrame.BorderSizePixel = 0
     MainFrame.Position = UDim2.new(0.3, 0, 0.3, 0)
     MainFrame.Size = UDim2.new(0, 380, 0, 450)
-    MainFrame.Visible = true -- start visible
+    MainFrame.Visible = true
     MainFrame.Parent = ScreenGui
 
     local MainCorner = Instance.new("UICorner")
     MainCorner.CornerRadius = UDim.new(0, 12)
     MainCorner.Parent = MainFrame
 
-    -- Shadow for main window
     local Shadow = Instance.new("Frame")
     Shadow.Name = "Shadow"
     Shadow.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
@@ -96,23 +141,21 @@ function Unsophisicated:CreateWindow(name)
     Title.Position = UDim2.new(0, 15, 0, 0)
     Title.Size = UDim2.new(0, 200, 1, 0)
     Title.Font = Enum.Font.GothamBold
-    Title.Text = name
+    Title.Text = windowName
     Title.TextColor3 = Color3.fromRGB(220, 220, 255)
     Title.TextSize = 16
     Title.TextXAlignment = Enum.TextXAlignment.Left
     Title.Parent = TitleBar
 
-    -- Drag functionality (same as before, attached to MainFrame and TitleBar)
-    local dragStartPos
-    local startPos
-    local isDragging = false
+    -- Drag functionality for main window (same as before)
+    local dragStartPos, startPos, isDragging = nil, nil, false
 
     local function updateInput(input)
         local delta = input.Position - dragStartPos
         MainFrame.Position = UDim2.new(
-            startPos.X.Scale, 
+            startPos.X.Scale,
             startPos.X.Offset + delta.X,
-            startPos.Y.Scale, 
+            startPos.Y.Scale,
             startPos.Y.Offset + delta.Y
         )
     end
@@ -122,7 +165,7 @@ function Unsophisicated:CreateWindow(name)
             isDragging = true
             dragStartPos = input.Position
             startPos = MainFrame.Position
-            
+
             local conn
             conn = input.Changed:Connect(function()
                 if input.UserInputState == Enum.UserInputState.End then
@@ -171,10 +214,9 @@ function Unsophisicated:CreateWindow(name)
     ContentCorner.CornerRadius = UDim.new(0, 8)
     ContentCorner.Parent = ContentArea
 
-    -- Toggle functionality
+    -- Toggle functionality (click to show/hide main window)
     ToggleButton.MouseButton1Click:Connect(function()
         MainFrame.Visible = not MainFrame.Visible
-        -- Optional: animate toggle button when window hidden/shown?
         if MainFrame.Visible then
             TweenService:Create(ToggleButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(120, 80, 200)}):Play()
         else
@@ -182,18 +224,18 @@ function Unsophisicated:CreateWindow(name)
         end
     end)
 
-    -- Helper function to create elements (same as before)
+    -- Helper function to create elements
     local function CreateElement(name, height)
         local Element = Instance.new("Frame")
         Element.Name = name
         Element.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
         Element.BorderSizePixel = 0
         Element.Size = UDim2.new(1, -10, 0, height)
-        
+
         local Corner = Instance.new("UICorner")
         Corner.CornerRadius = UDim.new(0, 6)
         Corner.Parent = Element
-        
+
         return Element
     end
 
