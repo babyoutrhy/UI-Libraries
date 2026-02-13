@@ -14,9 +14,9 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     ScreenGui.ResetOnSpawn = false
 
-    -- === TOGGLE BUTTON (draggable, custom text) ===
+    -- === TOGGLE BUTTON ===
     local buttonWidth = TextService:GetTextSize(buttonText, 20, Enum.Font.GothamBold, Vector2.new(0, 0)).X + 40
-    local buttonHeight = 50 -- slightly taller for easier touch
+    local buttonHeight = 50
     local ToggleButton = Instance.new("TextButton")
     ToggleButton.Name = "ToggleButton"
     ToggleButton.BackgroundColor3 = Color3.fromRGB(120, 80, 200)
@@ -30,65 +30,46 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
     ToggleButton.AutoButtonColor = false
     ToggleButton.Parent = ScreenGui
 
-    -- Rounded pill shape
     local ToggleCorner = Instance.new("UICorner")
     ToggleCorner.CornerRadius = UDim.new(1, 0)
     ToggleCorner.Parent = ToggleButton
 
-    -- Shadow effect
-    local ToggleShadow = Instance.new("Frame")
-    ToggleShadow.Name = "Shadow"
-    ToggleShadow.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    ToggleShadow.BackgroundTransparency = 0.7
-    ToggleShadow.Size = UDim2.new(1, 6, 1, 6)
-    ToggleShadow.Position = UDim2.new(0, -3, 0, -3)
-    ToggleShadow.ZIndex = 9
-    ToggleShadow.Parent = ToggleButton
-    local ShadowCorner = Instance.new("UICorner")
-    ShadowCorner.CornerRadius = UDim.new(1, 0)
-    ShadowCorner.Parent = ToggleShadow
+    -- Smooth drag for toggle button (RenderStepped)
+    local toggleDragging = false
+    local toggleDragStart, toggleStartPos
+    local toggleConnection
 
-    -- === DRAG HANDLER (reusable) ===
-    local function makeDraggable(dragHandle, targetFrame)
-        local dragging = false
-        local dragStart, startPos
+    ToggleButton.InputBegan:Connect(function(input, processed)
+        if processed then return end
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            toggleDragging = true
+            toggleDragStart = input.Position
+            toggleStartPos = ToggleButton.Position
 
-        local function updatePosition(input)
-            if not dragging then return end
-            local delta = input.Position - dragStart
-            targetFrame.Position = UDim2.new(
-                startPos.X.Scale,
-                startPos.X.Offset + delta.X,
-                startPos.Y.Scale,
-                startPos.Y.Offset + delta.Y
-            )
-        end
+            -- Start polling mouse position every frame
+            toggleConnection = RunService.RenderStepped:Connect(function()
+                if not toggleDragging then return end
+                local mousePos = UserInputService:GetMouseLocation()
+                local delta = mousePos - toggleDragStart
+                ToggleButton.Position = UDim2.new(
+                    toggleStartPos.X.Scale,
+                    toggleStartPos.X.Offset + delta.X,
+                    toggleStartPos.Y.Scale,
+                    toggleStartPos.Y.Offset + delta.Y
+                )
+            end)
 
-        dragHandle.InputBegan:Connect(function(input, processed)
-            if processed then return end
-            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                dragging = true
-                dragStart = input.Position
-                startPos = targetFrame.Position
-
-                input.Changed:Connect(function()
-                    if input.UserInputState == Enum.UserInputState.End then
-                        dragging = false
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    toggleDragging = false
+                    if toggleConnection then
+                        toggleConnection:Disconnect()
+                        toggleConnection = nil
                     end
-                end)
-            end
-        end)
-
-        UserInputService.InputChanged:Connect(function(input, processed)
-            if not dragging or processed then return end
-            if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-                updatePosition(input)
-            end
-        end)
-    end
-
-    -- Make toggle button draggable
-    makeDraggable(ToggleButton, ToggleButton)
+                end
+            end)
+        end
+    end)
 
     -- === MAIN WINDOW ===
     local MainFrame = Instance.new("Frame")
@@ -96,11 +77,10 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
     MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
     MainFrame.BorderSizePixel = 0
     MainFrame.Position = UDim2.new(0.3, 0, 0.3, 0)
-    MainFrame.Size = UDim2.new(0, 400, 0, 450) -- slightly wider
+    MainFrame.Size = UDim2.new(0, 400, 0, 450)
     MainFrame.Visible = true
     MainFrame.Parent = ScreenGui
 
-    -- Rounded corners
     local MainCorner = Instance.new("UICorner")
     MainCorner.CornerRadius = UDim.new(0, 12)
     MainCorner.Parent = MainFrame
@@ -117,7 +97,6 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
     TitleBarCorner.CornerRadius = UDim.new(0, 12)
     TitleBarCorner.Parent = TitleBar
 
-    -- Gradient on title bar
     local Gradient = Instance.new("UIGradient")
     Gradient.Color = ColorSequence.new({
         ColorSequenceKeypoint.new(0, Color3.fromRGB(40, 40, 60)),
@@ -138,8 +117,41 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
     Title.TextXAlignment = Enum.TextXAlignment.Left
     Title.Parent = TitleBar
 
-    -- Make title bar drag the main window
-    makeDraggable(TitleBar, MainFrame)
+    -- Smooth drag for title bar (RenderStepped)
+    local mainDragging = false
+    local mainDragStart, mainStartPos
+    local mainConnection
+
+    TitleBar.InputBegan:Connect(function(input, processed)
+        if processed then return end
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            mainDragging = true
+            mainDragStart = input.Position
+            mainStartPos = MainFrame.Position
+
+            mainConnection = RunService.RenderStepped:Connect(function()
+                if not mainDragging then return end
+                local mousePos = UserInputService:GetMouseLocation()
+                local delta = mousePos - mainDragStart
+                MainFrame.Position = UDim2.new(
+                    mainStartPos.X.Scale,
+                    mainStartPos.X.Offset + delta.X,
+                    mainStartPos.Y.Scale,
+                    mainStartPos.Y.Offset + delta.Y
+                )
+            end)
+
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    mainDragging = false
+                    if mainConnection then
+                        mainConnection:Disconnect()
+                        mainConnection = nil
+                    end
+                end
+            end)
+        end
+    end)
 
     -- Tab Bar
     local TabBar = Instance.new("Frame")
@@ -171,7 +183,6 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
     -- Toggle button click to show/hide main window
     ToggleButton.MouseButton1Click:Connect(function()
         MainFrame.Visible = not MainFrame.Visible
-        -- Slight color change to indicate state
         local targetColor = MainFrame.Visible and Color3.fromRGB(120, 80, 200) or Color3.fromRGB(80, 60, 150)
         TweenService:Create(ToggleButton, TweenInfo.new(0.2), {BackgroundColor3 = targetColor}):Play()
     end)
@@ -212,7 +223,7 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
         ButtonCorner.CornerRadius = UDim.new(1, 0)
         ButtonCorner.Parent = TabButton
 
-        -- Tab content (scrolling frame)
+        -- Tab content
         local TabContent = Instance.new("ScrollingFrame")
         TabContent.Name = tabName
         TabContent.BackgroundTransparency = 1
@@ -274,7 +285,6 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
             ButtonCorner.CornerRadius = UDim.new(0, 6)
             ButtonCorner.Parent = Button
 
-            -- Hover effect
             Button.MouseEnter:Connect(function()
                 TweenService:Create(Button, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(130, 90, 210)}):Play()
             end)
@@ -414,6 +424,7 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
             local step = config.Step or 1
             local value = config.Default or min
             local dragging = false
+            local dragConnection
 
             local function updateValueFromPos(inputPos)
                 local trackSize = Track.AbsoluteSize.X
@@ -436,20 +447,25 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
                 if processed then return end
                 if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                     dragging = true
+                    -- Immediately set value at click position
                     updateValueFromPos(input.Position.X - Track.AbsolutePosition.X)
+
+                    -- Connect RenderStepped for smooth dragging
+                    dragConnection = RunService.RenderStepped:Connect(function()
+                        if not dragging then return end
+                        local mousePos = UserInputService:GetMouseLocation()
+                        updateValueFromPos(mousePos.X - Track.AbsolutePosition.X)
+                    end)
 
                     input.Changed:Connect(function()
                         if input.UserInputState == Enum.UserInputState.End then
                             dragging = false
+                            if dragConnection then
+                                dragConnection:Disconnect()
+                                dragConnection = nil
+                            end
                         end
                     end)
-                end
-            end)
-
-            UserInputService.InputChanged:Connect(function(input, processed)
-                if not dragging or processed then return end
-                if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-                    updateValueFromPos(input.Position.X - Track.AbsolutePosition.X)
                 end
             end)
 
