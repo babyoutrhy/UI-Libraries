@@ -1,7 +1,6 @@
 local Unsophisicated = {}
 
 function Unsophisicated:CreateWindow(windowName, buttonText)
-    -- If buttonText not provided, use windowName or default to "Menu"
     buttonText = buttonText or windowName or "Menu"
     
     local UserInputService = game:GetService("UserInputService")
@@ -9,21 +8,20 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
     local TextService = game:GetService("TextService")
     local RunService = game:GetService("RunService")
 
-    -- Main GUI
     local ScreenGui = Instance.new("ScreenGui")
     ScreenGui.Name = "UnsophisicatedUI"
     ScreenGui.Parent = game.CoreGui
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     ScreenGui.ResetOnSpawn = false
 
-    -- === TOP CENTER TOGGLE BUTTON (draggable, with custom text) ===
-    local buttonWidth = TextService:GetTextSize(buttonText, 20, Enum.Font.GothamBold, Vector2.new(0, 0)).X + 40 -- padding
+    -- === DRAGGABLE TOGGLE BUTTON ===
+    local buttonWidth = TextService:GetTextSize(buttonText, 20, Enum.Font.GothamBold, Vector2.new(0, 0)).X + 40
     local buttonHeight = 45
     local ToggleButton = Instance.new("TextButton")
     ToggleButton.Name = "ToggleButton"
     ToggleButton.BackgroundColor3 = Color3.fromRGB(120, 80, 200)
     ToggleButton.Size = UDim2.new(0, buttonWidth, 0, buttonHeight)
-    ToggleButton.Position = UDim2.new(0.5, -buttonWidth/2, 0, 15) -- top center
+    ToggleButton.Position = UDim2.new(0.5, -buttonWidth/2, 0, 15)
     ToggleButton.Font = Enum.Font.GothamBold
     ToggleButton.Text = buttonText
     ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -31,12 +29,10 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
     ToggleButton.ZIndex = 10
     ToggleButton.Parent = ScreenGui
 
-    -- Rounded corners (pill shape)
     local ToggleCorner = Instance.new("UICorner")
-    ToggleCorner.CornerRadius = UDim.new(1, 0) -- fully rounded ends
+    ToggleCorner.CornerRadius = UDim.new(1, 0)
     ToggleCorner.Parent = ToggleButton
 
-    -- Subtle shadow
     local ToggleShadow = Instance.new("Frame")
     ToggleShadow.Name = "Shadow"
     ToggleShadow.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
@@ -49,10 +45,12 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
     ShadowCorner.CornerRadius = UDim.new(1, 0)
     ShadowCorner.Parent = ToggleShadow
 
-    -- Drag variables for toggle button
+    -- Smooth drag for toggle button using RenderStepped
     local toggleDragStart, toggleStartPos, toggleDragging = nil, nil, false
+    local dragConnection = nil
 
-    local function updateToggleInput(input)
+    local function updateTogglePosition(input)
+        if not toggleDragging then return end
         local delta = input.Position - toggleDragStart
         ToggleButton.Position = UDim2.new(
             toggleStartPos.X.Scale,
@@ -62,30 +60,39 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
         )
     end
 
-    local function onToggleInputBegan(input, processed)
+    local function onToggleDrag(input)
+        if toggleDragging then
+            updateTogglePosition(input)
+        end
+    end
+
+    ToggleButton.InputBegan:Connect(function(input, processed)
         if not processed and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
             toggleDragging = true
             toggleDragStart = input.Position
             toggleStartPos = ToggleButton.Position
 
-            local conn
-            conn = input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    toggleDragging = false
-                    conn:Disconnect()
+            -- Use RenderStepped for smooth dragging
+            dragConnection = RunService.RenderStepped:Connect(function()
+                -- Get the last input position
+                local lastInput = UserInputService:GetLastInputType()
+                if lastInput == Enum.UserInputType.MouseMovement or lastInput == Enum.UserInputType.Touch then
+                    local mousePos = UserInputService:GetMouseLocation()
+                    -- Create a dummy input object with Position
+                    local dummyInput = {Position = mousePos}
+                    onToggleDrag(dummyInput)
                 end
             end)
-        end
-    end
 
-    ToggleButton.InputBegan:Connect(onToggleInputBegan)
-
-    -- Connect to InputChanged for dragging
-    UserInputService.InputChanged:Connect(function(input, processed)
-        if toggleDragging and not processed then
-            if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-                updateToggleInput(input)
-            end
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    toggleDragging = false
+                    if dragConnection then
+                        dragConnection:Disconnect()
+                        dragConnection = nil
+                    end
+                end
+            end)
         end
     end)
 
@@ -115,7 +122,7 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
     ShadowCornerMain.CornerRadius = UDim.new(0, 16)
     ShadowCornerMain.Parent = Shadow
 
-    -- Title Bar
+    -- Title Bar (only draggable part)
     local TitleBar = Instance.new("Frame")
     TitleBar.Name = "TitleBar"
     TitleBar.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
@@ -147,10 +154,12 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
     Title.TextXAlignment = Enum.TextXAlignment.Left
     Title.Parent = TitleBar
 
-    -- Drag functionality for main window (same as before)
+    -- Drag for TitleBar only (smooth)
     local dragStartPos, startPos, isDragging = nil, nil, false
+    local mainDragConnection = nil
 
-    local function updateInput(input)
+    local function updateMainPosition(input)
+        if not isDragging then return end
         local delta = input.Position - dragStartPos
         MainFrame.Position = UDim2.new(
             startPos.X.Scale,
@@ -160,32 +169,38 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
         )
     end
 
-    local function onInputBegan(input, processed)
+    local function onMainDrag(input)
+        if isDragging then
+            updateMainPosition(input)
+        end
+    end
+
+    TitleBar.InputBegan:Connect(function(input, processed)
         if not processed and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
             isDragging = true
             dragStartPos = input.Position
             startPos = MainFrame.Position
 
-            local conn
-            conn = input.Changed:Connect(function()
+            mainDragConnection = RunService.RenderStepped:Connect(function()
+                local lastInput = UserInputService:GetLastInputType()
+                if lastInput == Enum.UserInputType.MouseMovement or lastInput == Enum.UserInputType.Touch then
+                    local mousePos = UserInputService:GetMouseLocation()
+                    local dummyInput = {Position = mousePos}
+                    onMainDrag(dummyInput)
+                end
+            end)
+
+            input.Changed:Connect(function()
                 if input.UserInputState == Enum.UserInputState.End then
                     isDragging = false
-                    conn:Disconnect()
+                    if mainDragConnection then
+                        mainDragConnection:Disconnect()
+                        mainDragConnection = nil
+                    end
                 end
             end)
         end
-    end
-
-    UserInputService.InputChanged:Connect(function(input, processed)
-        if isDragging and not processed then
-            if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-                updateInput(input)
-            end
-        end
     end)
-
-    MainFrame.InputBegan:Connect(onInputBegan)
-    TitleBar.InputBegan:Connect(onInputBegan)
 
     -- Tab Bar
     local TabBar = Instance.new("Frame")
@@ -214,7 +229,7 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
     ContentCorner.CornerRadius = UDim.new(0, 8)
     ContentCorner.Parent = ContentArea
 
-    -- Toggle functionality (click to show/hide main window)
+    -- Toggle functionality
     ToggleButton.MouseButton1Click:Connect(function()
         MainFrame.Visible = not MainFrame.Visible
         if MainFrame.Visible then
@@ -243,7 +258,6 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
     local currentTab = nil
 
     function Window:AddTab(tabName)
-        -- Tab Button
         local TabButton = Instance.new("TextButton")
         TabButton.Name = tabName
         TabButton.BackgroundColor3 = Color3.fromRGB(45, 45, 60)
@@ -260,7 +274,6 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
         ButtonCorner.CornerRadius = UDim.new(1, 0)
         ButtonCorner.Parent = TabButton
 
-        -- Tab Content
         local TabContent = Instance.new("ScrollingFrame")
         TabContent.Name = tabName
         TabContent.BackgroundTransparency = 1
