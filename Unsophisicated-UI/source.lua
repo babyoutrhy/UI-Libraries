@@ -19,12 +19,11 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
     local baseWidth = 400
     local baseHeight = 450
 
-    -- Function to get mobile scale (adjusts based on screen size)
     local function getMobileScale()
         local viewportSize = workspace.CurrentCamera.ViewportSize
-        local scaleX = viewportSize.X / 800  -- reference width
-        local scaleY = viewportSize.Y / 1000 -- reference height
-        return math.min(scaleX, scaleY, 1.2) -- cap at 1.2 to avoid too large
+        local scaleX = viewportSize.X / 800
+        local scaleY = viewportSize.Y / 1000
+        return math.min(scaleX, scaleY, 1.2)
     end
 
     -- === TOGGLE BUTTON ===
@@ -60,7 +59,7 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
     ShadowCorner.CornerRadius = UDim.new(1, 0)
     ShadowCorner.Parent = ToggleShadow
 
-    -- Drag for toggle button (new smooth method)
+    -- Drag for toggle button
     local toggleDragging = false
     local toggleDragInput
     local toggleDragStart
@@ -117,7 +116,6 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
     MainCorner.CornerRadius = UDim.new(0, 12)
     MainCorner.Parent = MainFrame
 
-    -- Shadow for main window
     local Shadow = Instance.new("Frame")
     Shadow.Name = "MainShadow"
     Shadow.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
@@ -130,7 +128,7 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
     ShadowCornerMain.CornerRadius = UDim.new(0, 16)
     ShadowCornerMain.Parent = Shadow
 
-    -- Title Bar (only draggable part)
+    -- Title Bar
     local TitleBar = Instance.new("Frame")
     TitleBar.Name = "TitleBar"
     TitleBar.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
@@ -162,7 +160,7 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
     Title.TextXAlignment = Enum.TextXAlignment.Left
     Title.Parent = TitleBar
 
-    -- Drag for main window (new smooth method, only via TitleBar)
+    -- Drag for main window
     local mainDragging = false
     local mainDragInput
     local mainDragStart
@@ -205,7 +203,7 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
         end
     end)
 
-    -- Dynamic scaling for mobile
+    -- Mobile scaling
     local function updateMainFrameScale()
         if isMobile then
             local newScale = getMobileScale()
@@ -217,10 +215,9 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
         end
     end
 
-    -- Call on screen resize
     if isMobile then
         workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(updateMainFrameScale)
-        updateMainFrameScale() -- initial scale
+        updateMainFrameScale()
     end
 
     -- Tab Bar
@@ -542,6 +539,266 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
             Fill.Size = UDim2.new(0, initFill, 1, 0)
             Thumb.Position = UDim2.new(0, initFill - 8, 0.5, -8)
         end
+
+function Tab:AddDropdown(config)
+    local DropdownElement = CreateElement("Dropdown", 40)
+    DropdownElement.ClipsDescendants = false
+    DropdownElement.LayoutOrder = #TabContent:GetChildren()
+    DropdownElement.Parent = TabContent
+
+    -- Title on left
+    local DropdownTitle = Instance.new("TextLabel")
+    DropdownTitle.Name = "Title"
+    DropdownTitle.BackgroundTransparency = 1
+    DropdownTitle.Position = UDim2.new(0, 15, 0, 0)
+    DropdownTitle.Size = UDim2.new(0, 150, 1, 0)
+    DropdownTitle.Font = Enum.Font.Gotham
+    DropdownTitle.Text = config.Text
+    DropdownTitle.TextColor3 = Color3.fromRGB(220, 220, 240)
+    DropdownTitle.TextSize = 14
+    DropdownTitle.TextYAlignment = Enum.TextYAlignment.Center
+    DropdownTitle.TextXAlignment = Enum.TextXAlignment.Left
+    DropdownTitle.Parent = DropdownElement
+
+    -- Selection button on right
+    local SelectionButton = Instance.new("TextButton")
+    SelectionButton.Name = "SelectionButton"
+    SelectionButton.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
+    SelectionButton.Position = UDim2.new(1, -160, 0.5, -15)
+    SelectionButton.Size = UDim2.new(0, 150, 0, 30)
+    SelectionButton.Font = Enum.Font.Gotham
+    SelectionButton.Text = "Select" -- default
+    SelectionButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    SelectionButton.TextSize = 14
+    SelectionButton.Parent = DropdownElement
+
+    local Corner = Instance.new("UICorner")
+    Corner.CornerRadius = UDim.new(0, 6)
+    Corner.Parent = SelectionButton
+
+    -- Dropdown container (parent to ScreenGui)
+    local DropdownContainer = Instance.new("Frame")
+    DropdownContainer.Name = "DropdownContainer"
+    DropdownContainer.BackgroundTransparency = 1
+    DropdownContainer.Size = UDim2.new(0, 150, 0, 0)
+    DropdownContainer.Visible = false
+    DropdownContainer.ZIndex = 100
+    DropdownContainer.Parent = ScreenGui
+
+    local DropdownList = Instance.new("ScrollingFrame")
+    DropdownList.Name = "DropdownList"
+    DropdownList.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+    DropdownList.BorderSizePixel = 0
+    DropdownList.Size = UDim2.new(1, 0, 1, 0)
+    DropdownList.ScrollBarThickness = 5
+    DropdownList.CanvasSize = UDim2.new(0, 0, 0, 0)
+    DropdownList.ZIndex = 101
+    DropdownList.Parent = DropdownContainer
+
+    local Corner2 = Instance.new("UICorner")
+    Corner2.CornerRadius = UDim.new(0, 6)
+    Corner2.Parent = DropdownList
+
+    -- Shadow for dropdown
+    local DropdownShadow = Instance.new("Frame")
+    DropdownShadow.Name = "DropdownShadow"
+    DropdownShadow.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    DropdownShadow.BackgroundTransparency = 0.7
+    DropdownShadow.Size = UDim2.new(1, 6, 1, 6)
+    DropdownShadow.Position = UDim2.new(0, -3, 0, -3)
+    DropdownShadow.ZIndex = 99
+    DropdownShadow.Parent = DropdownContainer
+    local DropShadowCorner = Instance.new("UICorner")
+    DropShadowCorner.CornerRadius = UDim.new(0, 8)
+    DropShadowCorner.Parent = DropdownShadow
+
+    local ListLayout = Instance.new("UIListLayout")
+    ListLayout.Parent = DropdownList
+    ListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    ListLayout.Padding = UDim.new(0, 2)
+
+    -- Dropdown state
+    local dropdownOpen = false
+    local positionConnection
+    local selectedOptions = {}
+    local isMultiple = config.MultipleOptions or false
+
+    -- Set initial selection for single mode
+    if not isMultiple and config.Default then
+        SelectionButton.Text = config.Default
+    end
+
+    -- For multiple mode, set initial selected options if provided
+    if isMultiple and type(config.Default) == "table" then
+        for _, opt in ipairs(config.Default) do
+            selectedOptions[opt] = true
+        end
+        -- Update button text if any selected
+        local count = 0
+        for _ in pairs(selectedOptions) do count = count + 1 end
+        if count > 0 then
+            SelectionButton.Text = count .. " selected"
+        end
+    end
+
+    local function updateListSize()
+        local totalHeight = 0
+        for _, child in ipairs(DropdownList:GetChildren()) do
+            if child:IsA("TextButton") then
+                totalHeight = totalHeight + child.AbsoluteSize.Y + ListLayout.Padding.Offset
+            end
+        end
+        DropdownList.CanvasSize = UDim2.new(0, 0, 0, totalHeight)
+        DropdownContainer.Size = UDim2.new(0, 150, 0, math.min(150, totalHeight))
+    end
+
+    -- Update dropdown position to stick below button
+    local function updateDropdownPosition()
+        local buttonPos = SelectionButton.AbsolutePosition
+        DropdownContainer.Position = UDim2.new(
+            0,
+            buttonPos.X,
+            0,
+            buttonPos.Y + SelectionButton.AbsoluteSize.Y + 5
+        )
+    end
+
+    local function toggleDropdown()
+        if dropdownOpen then
+            DropdownContainer.Visible = false
+            dropdownOpen = false
+            if positionConnection then
+                positionConnection:Disconnect()
+                positionConnection = nil
+            end
+        else
+            updateDropdownPosition()
+            DropdownContainer.Visible = true
+            dropdownOpen = true
+            positionConnection = RunService.Heartbeat:Connect(updateDropdownPosition)
+        end
+    end
+
+    -- Create option buttons
+    for i, option in ipairs(config.Options) do
+        local OptionButton = Instance.new("TextButton")
+        OptionButton.Name = option
+        OptionButton.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
+        OptionButton.Size = UDim2.new(1, -4, 0, 30)
+        OptionButton.Position = UDim2.new(0, 2, 0, 0)
+        OptionButton.Font = Enum.Font.Gotham
+        OptionButton.Text = option
+        OptionButton.TextColor3 = Color3.fromRGB(220, 220, 240)
+        OptionButton.TextSize = 14
+        OptionButton.ZIndex = 102
+        OptionButton.TextTruncate = Enum.TextTruncate.AtEnd
+        OptionButton.LayoutOrder = i
+        OptionButton.Parent = DropdownList
+
+        local OptionCorner = Instance.new("UICorner")
+        OptionCorner.CornerRadius = UDim.new(0, 4)
+        OptionCorner.Parent = OptionButton
+
+        -- Checkbox for multiple selection
+        local Checkbox
+        if isMultiple then
+            Checkbox = Instance.new("Frame")
+            Checkbox.Name = "Checkbox"
+            Checkbox.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+            Checkbox.Position = UDim2.new(0, 8, 0.5, -8)
+            Checkbox.Size = UDim2.new(0, 16, 0, 16)
+            Checkbox.ZIndex = 103
+            Checkbox.Parent = OptionButton
+
+            local CheckboxCorner = Instance.new("UICorner")
+            CheckboxCorner.CornerRadius = UDim.new(0, 3)
+            CheckboxCorner.Parent = Checkbox
+
+            -- Checkmark
+            local Checkmark = Instance.new("TextLabel")
+            Checkmark.Name = "Checkmark"
+            Checkmark.BackgroundTransparency = 1
+            Checkmark.Size = UDim2.new(1, 0, 1, 0)
+            Checkmark.Font = Enum.Font.GothamBold
+            Checkmark.Text = "✓"
+            Checkmark.TextColor3 = Color3.fromRGB(255, 255, 255)
+            Checkmark.TextSize = 14
+            Checkmark.Visible = selectedOptions[option] or false
+            Checkmark.ZIndex = 104
+            Checkmark.Parent = Checkbox
+
+            if selectedOptions[option] then
+                Checkbox.BackgroundColor3 = Color3.fromRGB(140, 100, 230)
+            end
+
+            OptionButton.TextXAlignment = Enum.TextXAlignment.Center
+            OptionButton.Text = "   " .. option
+        end
+
+        OptionButton.MouseButton1Click:Connect(function()
+            if isMultiple then
+                selectedOptions[option] = not selectedOptions[option]
+                if Checkbox then
+                    if selectedOptions[option] then
+                        Checkbox.BackgroundColor3 = Color3.fromRGB(140, 100, 230)
+                        Checkbox.Checkmark.Visible = true
+                    else
+                        Checkbox.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+                        Checkbox.Checkmark.Visible = false
+                    end
+                end
+
+                local count = 0
+                for _ in pairs(selectedOptions) do count = count + 1 end
+                SelectionButton.Text = (count > 0) and (count .. " selected") or "Select"
+
+                if config.Callback then
+                    local selected = {}
+                    for opt, sel in pairs(selectedOptions) do if sel then table.insert(selected, opt) end end
+                    config.Callback(selected)
+                end
+            else
+                SelectionButton.Text = option
+                toggleDropdown()
+                if config.Callback then config.Callback(option) end
+            end
+        end)
+    end
+
+    ListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateListSize)
+    updateListSize()
+
+    SelectionButton.MouseButton1Click:Connect(toggleDropdown)
+
+    -- Close dropdown when clicking outside
+    UserInputService.InputBegan:Connect(function(input, processed)
+        if not dropdownOpen or processed then return end
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            local mousePos = input.Position
+            local dropdownAbs = DropdownContainer.AbsolutePosition
+            local dropdownSize = DropdownContainer.AbsoluteSize
+            local selectAbs = SelectionButton.AbsolutePosition
+            local selectSize = SelectionButton.AbsoluteSize
+
+            local inDropdown = mousePos.X >= dropdownAbs.X and mousePos.X <= dropdownAbs.X + dropdownSize.X and
+                               mousePos.Y >= dropdownAbs.Y and mousePos.Y <= dropdownAbs.Y + dropdownSize.Y
+            local inSelect = mousePos.X >= selectAbs.X and mousePos.X <= selectAbs.X + selectSize.X and
+                             mousePos.Y >= selectAbs.Y and mousePos.Y <= selectAbs.Y + selectSize.Y
+
+            if not inDropdown and not inSelect then
+                toggleDropdown() -- close
+            end
+        end
+    end)
+
+    -- Cleanup
+    DropdownElement.Destroying:Connect(function()
+        if positionConnection then
+            positionConnection:Disconnect()
+        end
+        DropdownContainer:Destroy()
+    end)
+end
 
         return Tab
     end
