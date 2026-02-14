@@ -349,67 +349,82 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
         end
 
         function Tab:AddToggle(config)
-            local Element = CreateElement("Toggle", 40)
-            Element.LayoutOrder = #TabContent:GetChildren()
-            Element.Parent = TabContent
+    local Element = CreateElement("Toggle", 40)
+    Element.LayoutOrder = #TabContent:GetChildren()
+    Element.Parent = TabContent
 
-            local Label = Instance.new("TextLabel")
-            Label.Name = "Title"
-            Label.BackgroundTransparency = 1
-            Label.Position = UDim2.new(0, 15, 0, 0)
-            Label.Size = UDim2.new(0, 200, 1, 0)
-            Label.Font = Enum.Font.Gotham
-            Label.Text = config.Text
-            Label.TextColor3 = Color3.fromRGB(220, 220, 240)
-            Label.TextSize = 14
-            Label.TextXAlignment = Enum.TextXAlignment.Left
-            Label.Parent = Element
+    local Label = Instance.new("TextLabel")
+    Label.Name = "Title"
+    Label.BackgroundTransparency = 1
+    Label.Position = UDim2.new(0, 15, 0, 0)
+    Label.Size = UDim2.new(0, 200, 1, 0)
+    Label.Font = Enum.Font.Gotham
+    Label.Text = config.Text
+    Label.TextColor3 = Color3.fromRGB(220, 220, 240)
+    Label.TextSize = 14
+    Label.TextXAlignment = Enum.TextXAlignment.Left
+    Label.Parent = Element
 
-            local ToggleContainer = Instance.new("Frame")
-            ToggleContainer.Name = "Container"
-            ToggleContainer.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
-            ToggleContainer.Position = UDim2.new(1, -70, 0.5, -12)
-            ToggleContainer.Size = UDim2.new(0, 50, 0, 24)
-            ToggleContainer.Parent = Element
+    local ToggleContainer = Instance.new("Frame")
+    ToggleContainer.Name = "Container"
+    ToggleContainer.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
+    ToggleContainer.Position = UDim2.new(1, -70, 0.5, -12)
+    ToggleContainer.Size = UDim2.new(0, 50, 0, 24)
+    ToggleContainer.Parent = Element
 
-            local ContainerCorner = Instance.new("UICorner")
-            ContainerCorner.CornerRadius = UDim.new(1, 0)
-            ContainerCorner.Parent = ToggleContainer
+    local ContainerCorner = Instance.new("UICorner")
+    ContainerCorner.CornerRadius = UDim.new(1, 0)
+    ContainerCorner.Parent = ToggleContainer
 
-            local Indicator = Instance.new("Frame")
-            Indicator.Name = "Indicator"
-            Indicator.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-            Indicator.BorderSizePixel = 0
-            Indicator.Size = UDim2.new(0, 20, 0, 20)
-            Indicator.Position = UDim2.new(0, 2, 0.5, -10)
-            Indicator.Parent = ToggleContainer
+    local Indicator = Instance.new("Frame")
+    Indicator.Name = "Indicator"
+    Indicator.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    Indicator.BorderSizePixel = 0
+    Indicator.Size = UDim2.new(0, 20, 0, 20)
+    Indicator.Position = UDim2.new(0, 2, 0.5, -10)
+    Indicator.Parent = ToggleContainer
 
-            local IndicatorCorner = Instance.new("UICorner")
-            IndicatorCorner.CornerRadius = UDim.new(1, 0)
-            IndicatorCorner.Parent = Indicator
+    local IndicatorCorner = Instance.new("UICorner")
+    IndicatorCorner.CornerRadius = UDim.new(1, 0)
+    IndicatorCorner.Parent = Indicator
 
-            local state = config.Default or false
+    local state = config.Default or false
 
-            local function update()
-                if state then
-                    TweenService:Create(Indicator, TweenInfo.new(0.2), {Position = UDim2.new(1, -22, 0.5, -10)}):Play()
-                    TweenService:Create(ToggleContainer, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(140, 100, 230)}):Play()
-                else
-                    TweenService:Create(Indicator, TweenInfo.new(0.2), {Position = UDim2.new(0, 2, 0.5, -10)}):Play()
-                    TweenService:Create(ToggleContainer, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(60, 60, 80)}):Play()
-                end
-            end
-            update()
-
-            ToggleContainer.InputBegan:Connect(function(input, processed)
-                if processed then return end
-                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                    state = not state
-                    update()
-                    if config.Callback then config.Callback(state) end
-                end
-            end)
+    local function updateUI()
+        if state then
+            TweenService:Create(Indicator, TweenInfo.new(0.2), {Position = UDim2.new(1, -22, 0.5, -10)}):Play()
+            TweenService:Create(ToggleContainer, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(140, 100, 230)}):Play()
+        else
+            TweenService:Create(Indicator, TweenInfo.new(0.2), {Position = UDim2.new(0, 2, 0.5, -10)}):Play()
+            TweenService:Create(ToggleContainer, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(60, 60, 80)}):Play()
         end
+    end
+    updateUI()
+
+    ToggleContainer.InputBegan:Connect(function(input, processed)
+        if processed then return end
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            state = not state
+            updateUI()
+            if config.Callback then config.Callback(state) end
+        end
+    end)
+
+    -- Return an object to control the toggle programmatically
+    local toggleObject = {}
+    function toggleObject:Set(newState, suppressCallback)
+        if newState == state then return end
+        state = newState
+        updateUI()
+        if not suppressCallback and config.Callback then
+            config.Callback(state)
+        end
+    end
+    function toggleObject:Get()
+        return state
+    end
+    return toggleObject
+end
 
         function Tab:AddLabel(config)
            local LabelElement = CreateElement("Label", 20)
@@ -427,6 +442,7 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
            Label.TextXAlignment = Enum.TextXAlignment.Left
            Label.Parent = LabelElement
         end
+        
         function Tab:AddSlider(config)
             local Element = CreateElement("Slider", 55)
             Element.LayoutOrder = #TabContent:GetChildren()
