@@ -1,5 +1,3 @@
--- Unsophisicated UI - Ozen Drag Method with Shadows
-
 local Unsophisicated = {}
 
 function Unsophisicated:CreateWindow(windowName, buttonText)
@@ -15,6 +13,19 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
     ScreenGui.Parent = game.CoreGui
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     ScreenGui.ResetOnSpawn = false
+
+    -- Mobile detection
+    local isMobile = UserInputService.TouchEnabled and not UserInputService.MouseEnabled
+    local baseWidth = 400
+    local baseHeight = 450
+
+    -- Function to get mobile scale (adjusts based on screen size)
+    local function getMobileScale()
+        local viewportSize = workspace.CurrentCamera.ViewportSize
+        local scaleX = viewportSize.X / 800  -- reference width
+        local scaleY = viewportSize.Y / 1000 -- reference height
+        return math.min(scaleX, scaleY, 1.2) -- cap at 1.2 to avoid too large
+    end
 
     -- === TOGGLE BUTTON ===
     local buttonWidth = TextService:GetTextSize(buttonText, 20, Enum.Font.GothamBold, Vector2.new(0, 0)).X + 40
@@ -49,13 +60,13 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
     ShadowCorner.CornerRadius = UDim.new(1, 0)
     ShadowCorner.Parent = ToggleShadow
 
-    -- Drag for toggle button (Ozen method)
+    -- Drag for toggle button (new smooth method)
     local toggleDragging = false
+    local toggleDragInput
     local toggleDragStart
     local toggleStartPos
 
-    local function updateToggle(input)
-        if not toggleDragging then return end
+    local function updateTogglePosition(input)
         local delta = input.Position - toggleDragStart
         ToggleButton.Position = UDim2.new(
             toggleStartPos.X.Scale,
@@ -65,24 +76,32 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
         )
     end
 
-    local function onToggleInputBegan(input, processed)
-        if processed then return end
+    ToggleButton.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             toggleDragging = true
             toggleDragStart = input.Position
             toggleStartPos = ToggleButton.Position
+            toggleDragInput = input
 
-            local conn
-            conn = input.Changed:Connect(function()
+            input.Changed:Connect(function()
                 if input.UserInputState == Enum.UserInputState.End then
                     toggleDragging = false
-                    conn:Disconnect()
                 end
             end)
         end
-    end
+    end)
 
-    ToggleButton.InputBegan:Connect(onToggleInputBegan)
+    ToggleButton.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            toggleDragInput = input
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if input == toggleDragInput and toggleDragging then
+            updateTogglePosition(input)
+        end
+    end)
 
     -- === MAIN WINDOW ===
     local MainFrame = Instance.new("Frame")
@@ -90,7 +109,7 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
     MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
     MainFrame.BorderSizePixel = 0
     MainFrame.Position = UDim2.new(0.3, 0, 0.3, 0)
-    MainFrame.Size = UDim2.new(0, 400, 0, 450)
+    MainFrame.Size = UDim2.new(0, baseWidth, 0, baseHeight)
     MainFrame.Visible = true
     MainFrame.Parent = ScreenGui
 
@@ -143,13 +162,13 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
     Title.TextXAlignment = Enum.TextXAlignment.Left
     Title.Parent = TitleBar
 
-    -- Drag for main window (Ozen method, only via TitleBar)
+    -- Drag for main window (new smooth method, only via TitleBar)
     local mainDragging = false
+    local mainDragInput
     local mainDragStart
     local mainStartPos
 
-    local function updateMain(input)
-        if not mainDragging then return end
+    local function updateMainPosition(input)
         local delta = input.Position - mainDragStart
         MainFrame.Position = UDim2.new(
             mainStartPos.X.Scale,
@@ -159,33 +178,50 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
         )
     end
 
-    local function onMainInputBegan(input, processed)
-        if processed then return end
+    TitleBar.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             mainDragging = true
             mainDragStart = input.Position
             mainStartPos = MainFrame.Position
+            mainDragInput = input
 
-            local conn
-            conn = input.Changed:Connect(function()
+            input.Changed:Connect(function()
                 if input.UserInputState == Enum.UserInputState.End then
                     mainDragging = false
-                    conn:Disconnect()
                 end
             end)
         end
-    end
+    end)
 
-    TitleBar.InputBegan:Connect(onMainInputBegan)
-
-    -- Global InputChanged to handle dragging
-    UserInputService.InputChanged:Connect(function(input, processed)
-        if processed then return end
+    TitleBar.InputChanged:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-            updateToggle(input)
-            updateMain(input)
+            mainDragInput = input
         end
     end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if input == mainDragInput and mainDragging then
+            updateMainPosition(input)
+        end
+    end)
+
+    -- Dynamic scaling for mobile
+    local function updateMainFrameScale()
+        if isMobile then
+            local newScale = getMobileScale()
+            local newWidth = baseWidth * newScale
+            local newHeight = baseHeight * newScale
+
+            MainFrame.Size = UDim2.new(0, newWidth, 0, newHeight)
+            MainFrame.Position = UDim2.new(0.5, -newWidth/2, 0.5, -newHeight/2)
+        end
+    end
+
+    -- Call on screen resize
+    if isMobile then
+        workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(updateMainFrameScale)
+        updateMainFrameScale() -- initial scale
+    end
 
     -- Tab Bar
     local TabBar = Instance.new("Frame")
@@ -494,7 +530,7 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
                             dragging = false
                             if dragConnection then
                                 dragConnection:Disconnect()
-                                dragConnection = nil 
+                                dragConnection = nil
                             end
                         end
                     end)
