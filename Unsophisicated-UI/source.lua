@@ -411,6 +411,22 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
             end)
         end
 
+        function Tab:AddLabel(config)
+           local LabelElement = CreateElement("Label", 20)
+           LabelElement.LayoutOrder = #TabContent:GetChildren()
+           LabelElement.Parent = TabContent
+
+           local Label = Instance.new("TextLabel")
+           Label.Name = "Text"
+           Label.BackgroundTransparency = 1
+           Label.Size = UDim2.new(1, 0, 1, 0)
+           Label.Font = Enum.Font.Gotham
+           Label.Text = config.Text
+           Label.TextColor3 = Color3.fromRGB(220, 220, 240)
+           Label.TextSize = 14
+           Label.TextXAlignment = Enum.TextXAlignment.Left
+           Label.Parent = LabelElement
+        end
         function Tab:AddSlider(config)
             local Element = CreateElement("Slider", 55)
             Element.LayoutOrder = #TabContent:GetChildren()
