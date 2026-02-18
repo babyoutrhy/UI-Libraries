@@ -269,9 +269,8 @@ function Tab:AddToggle(config)
     ToggleContainer.Size = UDim2.new(0, 40, 0, 20)
     ToggleContainer.Parent = ToggleElement
 
-    -- Add UICorner to the toggle container (pill shape)
     local ContainerCorner = Instance.new("UICorner")
-    ContainerCorner.CornerRadius = UDim.new(1, 0) -- Fully rounded ends
+    ContainerCorner.CornerRadius = UDim.new(1, 0)
     ContainerCorner.Parent = ToggleContainer
 
     local ToggleIndicator = Instance.new("Frame")
@@ -282,24 +281,23 @@ function Tab:AddToggle(config)
     ToggleIndicator.Size = UDim2.new(0, 16, 0, 16)
     ToggleIndicator.Parent = ToggleContainer
 
-    -- Add UICorner to the indicator (circle)
     local IndicatorCorner = Instance.new("UICorner")
     IndicatorCorner.CornerRadius = UDim.new(1, 0)
     IndicatorCorner.Parent = ToggleIndicator
 
-    -- Rest of the toggle logic remains unchanged...
-    local ToggleState = false
+    local ToggleState = config.Default or false
 
     local function updateToggle()
         if ToggleState then
             TweenService:Create(ToggleIndicator, TweenInfo.new(0.2), {Position = UDim2.new(1, -18, 0, 2)}):Play()
-            TweenService:Create(ToggleContainer, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(0, 170, 255)}):Play()
+            TweenService:Create(ToggleContainer, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(140, 100, 230)}) -- purple active
         else
             TweenService:Create(ToggleIndicator, TweenInfo.new(0.2), {Position = UDim2.new(0, 2, 0, 2)}):Play()
             TweenService:Create(ToggleContainer, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(30, 30, 30)}):Play()
         end
     end
 
+    updateToggle()
     ToggleContainer.InputBegan:Connect(function(input, processed)
         if not processed and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
             ToggleState = not ToggleState
