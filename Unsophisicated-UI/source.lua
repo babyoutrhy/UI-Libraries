@@ -19,10 +19,11 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
     local baseHeight = 450
 
     local function getMobileScale()
-        local viewportSize = workspace.CurrentCamera.ViewportSize
-        local scaleX = viewportSize.X / 800
-        local scaleY = viewportSize.Y / 1000
-        return math.min(scaleX, scaleY, 1.2)
+    local viewportSize = workspace.CurrentCamera.ViewportSize
+    local scaleX = viewportSize.X / 500
+    local scaleY = viewportSize.Y / 700
+    local scale = math.min(scaleX, scaleY)
+    return math.clamp(scale, 0.7, 1.5)
     end
 
     local buttonWidth = TextService:GetTextSize(buttonText, 20, Enum.Font.GothamBold, Vector2.new(0, 0)).X + 40
