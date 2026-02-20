@@ -602,35 +602,37 @@ end
             Thumb.Position = UDim2.new(0, initFill - 8, 0.5, -8)
         end
 
-        function Tab:AddDropdown(config)
-            local DropdownElement = CreateElement("Dropdown", 40)
-            DropdownElement.ClipsDescendants = false
-            DropdownElement.LayoutOrder = #TabContent:GetChildren()
-            DropdownElement.Parent = TabContent
+function Tab:AddDropdown(config)
+    local DropdownElement = CreateElement("Dropdown", 40)
+    DropdownElement.ClipsDescendants = false
+    DropdownElement.LayoutOrder = #TabContent:GetChildren()
+    DropdownElement.Parent = TabContent
 
-            local DropdownTitle = Instance.new("TextLabel")
-            DropdownTitle.Name = "Title"
-            DropdownTitle.BackgroundTransparency = 1
-            DropdownTitle.Position = UDim2.new(0, 15, 0, 0)
-            DropdownTitle.Size = UDim2.new(0, 150, 1, 0)
-            DropdownTitle.Font = Enum.Font.Gotham
-            DropdownTitle.Text = config.Text
-            DropdownTitle.TextColor3 = Color3.fromRGB(220, 220, 240)
-            DropdownTitle.TextSize = 14
-            DropdownTitle.TextYAlignment = Enum.TextYAlignment.Center
-            DropdownTitle.TextXAlignment = Enum.TextXAlignment.Left
-            DropdownTitle.Parent = DropdownElement
+    local DropdownTitle = Instance.new("TextLabel")
+    DropdownTitle.Name = "Title"
+    DropdownTitle.BackgroundTransparency = 1
+    DropdownTitle.Position = UDim2.new(0, 15, 0, 0)
+    DropdownTitle.Size = UDim2.new(0, 150, 1, 0)
+    DropdownTitle.Font = Enum.Font.Gotham
+    DropdownTitle.Text = config.Text
+    DropdownTitle.TextColor3 = Color3.fromRGB(220, 220, 240)
+    DropdownTitle.TextSize = 14
+    DropdownTitle.TextYAlignment = Enum.TextYAlignment.Center
+    DropdownTitle.TextXAlignment = Enum.TextXAlignment.Left
+    DropdownTitle.TextTruncate = Enum.TextTruncate.AtEnd  -- ADD THIS
+    DropdownTitle.Parent = DropdownElement
 
-            local SelectionButton = Instance.new("TextButton")
-            SelectionButton.Name = "SelectionButton"
-            SelectionButton.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
-            SelectionButton.Position = UDim2.new(1, -160, 0.5, -15)
-            SelectionButton.Size = UDim2.new(0, 150, 0, 30)
-            SelectionButton.Font = Enum.Font.Gotham
-            SelectionButton.Text = "Select"
-            SelectionButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-            SelectionButton.TextSize = 14
-            SelectionButton.Parent = DropdownElement
+    local SelectionButton = Instance.new("TextButton")
+    SelectionButton.Name = "SelectionButton"
+    SelectionButton.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
+    SelectionButton.Position = UDim2.new(1, -160, 0.5, -15)
+    SelectionButton.Size = UDim2.new(0, 150, 0, 30)
+    SelectionButton.Font = Enum.Font.Gotham
+    SelectionButton.Text = "Select"
+    SelectionButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    SelectionButton.TextSize = 14
+    SelectionButton.TextTruncate = Enum.TextTruncate.AtEnd  -- ADD THIS
+    SelectionButton.Parent = DropdownElement
 
             local Corner = Instance.new("UICorner")
             Corner.CornerRadius = UDim.new(0, 6)
