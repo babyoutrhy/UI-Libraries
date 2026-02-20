@@ -348,11 +348,13 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
 
             Button.MouseButton1Click:Connect(config.Callback or function() end)
         end
+
         function Tab:AddToggle(config)
     local ToggleElement = CreateElement("Toggle", 30)
     ToggleElement.LayoutOrder = #TabContent:GetChildren()
     ToggleElement.Parent = TabContent
 
+    -- Title
     local ToggleTitle = Instance.new("TextLabel")
     ToggleTitle.Name = "Title"
     ToggleTitle.BackgroundTransparency = 1
@@ -365,6 +367,7 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
     ToggleTitle.TextXAlignment = Enum.TextXAlignment.Left
     ToggleTitle.Parent = ToggleElement
 
+    -- Toggle container
     local ToggleContainer = Instance.new("Frame")
     ToggleContainer.Name = "Container"
     ToggleContainer.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
@@ -387,44 +390,97 @@ function Unsophisicated:CreateWindow(windowName, buttonText)
     local IndicatorCorner = Instance.new("UICorner")
     IndicatorCorner.CornerRadius = UDim.new(1, 0)
     IndicatorCorner.Parent = ToggleIndicator
-            
+
+    -- State and methods
     local ToggleState = config.Default or false
+    local updating = false  -- prevent recursive callbacks
 
-    local function updateToggle(instant)
+    local function updateVisuals()
         if ToggleState then
-            if instant then
-                ToggleIndicator.Position = UDim2.new(1, -18, 0, 2)
-                ToggleContainer.BackgroundColor3 = Color3.fromRGB(140, 100, 230)
-            else
-                TweenService:Create(ToggleIndicator, TweenInfo.new(0.2), {Position = UDim2.new(1, -18, 0, 2)}):Play()
-                TweenService:Create(ToggleContainer, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(140, 100, 230)}):Play()
-            end
+            TweenService:Create(ToggleIndicator, TweenInfo.new(0.2), {Position = UDim2.new(1, -18, 0, 2)}):Play()
+            TweenService:Create(ToggleContainer, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(140, 100, 230)})
         else
-            if instant then
-                ToggleIndicator.Position = UDim2.new(0, 2, 0, 2)
-                ToggleContainer.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-            else
-                TweenService:Create(ToggleIndicator, TweenInfo.new(0.2), {Position = UDim2.new(0, 2, 0, 2)}):Play()
-                TweenService:Create(ToggleContainer, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(30, 30, 30)}):Play()
-            end
+            TweenService:Create(ToggleIndicator, TweenInfo.new(0.2), {Position = UDim2.new(0, 2, 0, 2)}):Play()
+            TweenService:Create(ToggleContainer, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(30, 30, 30)}):Play()
         end
     end
 
-    updateToggle(true)
-
-    local function onInput(input, processed)
-        if processed then return end
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            ToggleState = not ToggleState
-            updateToggle(false)
-            if config.Callback then
-                config.Callback(ToggleState)
-            end
+    -- External setter (used by group to turn off other toggles)
+    local function setState(newState, suppressCallback)
+        if ToggleState == newState then return end
+        ToggleState = newState
+        updateVisuals()
+        if not suppressCallback and config.Callback then
+            updating = true
+            config.Callback(newState)
+            updating = false
         end
     end
 
-    ToggleContainer.InputBegan:Connect(onInput)
-    ToggleIndicator.InputBegan:Connect(onInput)
+    updateVisuals()
+
+    -- Group handling
+    if config.Group then
+        -- Ensure group storage exists at tab level
+        if not self._toggleGroups then
+            self._toggleGroups = {}
+        end
+        local groupName = config.Group
+        if not self._toggleGroups[groupName] then
+            self._toggleGroups[groupName] = {}
+        end
+        local group = self._toggleGroups[groupName]
+
+        -- Store this toggle in the group (as a table with its setState)
+        local toggleInfo = { setState = setState }
+        table.insert(group, toggleInfo)
+
+        -- If this toggle starts as true, turn off any others in the group
+        if ToggleState then
+            for _, other in ipairs(group) do
+                if other ~= toggleInfo then
+                    other.setState(false, true)
+                end
+            end
+        end
+
+        -- Input handler for group toggles
+        ToggleContainer.InputBegan:Connect(function(input, processed)
+            if processed then return end
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                if not ToggleState then
+                    -- Turning on: turn off all other toggles in the group first
+                    for _, other in ipairs(group) do
+                        if other ~= toggleInfo then
+                            other.setState(false, true)
+                        end
+                    end
+                    setState(true, false)
+                else
+                    -- Turning off: allowed (becomes no active toggle)
+                    setState(false, false)
+                end
+            end
+        end)
+
+        -- Cleanup when element is destroyed
+        ToggleElement.Destroying:Connect(function()
+            for i, t in ipairs(group) do
+                if t == toggleInfo then
+                    table.remove(group, i)
+                    break
+                end
+            end
+        end)
+    else
+        -- Normal (non‑group) toggle
+        ToggleContainer.InputBegan:Connect(function(input, processed)
+            if processed then return end
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                setState(not ToggleState, false)
+            end
+        end)
+    end
 end
 
         function Tab:AddLabel(config)
