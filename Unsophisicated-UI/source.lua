@@ -833,15 +833,14 @@ end
         end
 
 function Tab:AddTextbox(config)
-    -- config: {Text = "Label", Placeholder = "Type...", Default = "", Callback = function(text) end}
-    local TextboxElement = CreateElement("Textbox", 40) -- height 40 to match other elements
+    local TextboxElement = CreateElement("Textbox", 40)
     TextboxElement.LayoutOrder = #TabContent:GetChildren()
     TextboxElement.Parent = TabContent
 
     local TextboxTitle = Instance.new("TextLabel")
     TextboxTitle.Name = "Title"
     TextboxTitle.BackgroundTransparency = 1
-    TextboxTitle.Position = UDim2.new(0, 15, 0, 0) -- left margin
+    TextboxTitle.Position = UDim2.new(0, 15, 0, 0)
     TextboxTitle.Size = UDim2.new(0, 150, 1, 0)
     TextboxTitle.Font = Enum.Font.Gotham
     TextboxTitle.Text = config.Text
@@ -853,8 +852,8 @@ function Tab:AddTextbox(config)
 
     local InputBox = Instance.new("TextBox")
     InputBox.Name = "Input"
-    InputBox.BackgroundColor3 = Color3.fromRGB(30, 30, 40) -- dark background
-    InputBox.Position = UDim2.new(1, -160, 0.5, -15) -- aligned right, 30px height
+    InputBox.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+    InputBox.Position = UDim2.new(1, -160, 0.5, -15)
     InputBox.Size = UDim2.new(0, 150, 0, 30)
     InputBox.Font = Enum.Font.Gotham
     InputBox.PlaceholderText = config.Placeholder or ""
@@ -862,7 +861,8 @@ function Tab:AddTextbox(config)
     InputBox.Text = config.Default or ""
     InputBox.TextColor3 = Color3.fromRGB(255, 255, 255)
     InputBox.TextSize = 14
-    InputBox.TextXAlignment = Enum.TextXAlignment.Left
+    InputBox.TextXAlignment = Enum.TextXAlignment.Center
+    InputBox.TextTruncate = Enum.TextTruncate.AtEnd
     InputBox.ClearTextOnFocus = false
     InputBox.Parent = TextboxElement
 
@@ -870,7 +870,6 @@ function Tab:AddTextbox(config)
     Corner.CornerRadius = UDim.new(0, 6)
     Corner.Parent = InputBox
 
-    -- Focus effect
     InputBox.Focused:Connect(function()
         TweenService:Create(InputBox, TweenInfo.new(0.2), {
             BackgroundColor3 = Color3.fromRGB(50, 50, 65)
