@@ -832,6 +832,62 @@ end
             end)
         end
 
+function Tab:AddTextbox(config)
+    -- config: {Text = "Label", Placeholder = "Type...", Default = "", Callback = function(text) end}
+    local TextboxElement = CreateElement("Textbox", 40) -- height 40 to match other elements
+    TextboxElement.LayoutOrder = #TabContent:GetChildren()
+    TextboxElement.Parent = TabContent
+
+    local TextboxTitle = Instance.new("TextLabel")
+    TextboxTitle.Name = "Title"
+    TextboxTitle.BackgroundTransparency = 1
+    TextboxTitle.Position = UDim2.new(0, 15, 0, 0) -- left margin
+    TextboxTitle.Size = UDim2.new(0, 150, 1, 0)
+    TextboxTitle.Font = Enum.Font.Gotham
+    TextboxTitle.Text = config.Text
+    TextboxTitle.TextColor3 = Color3.fromRGB(220, 220, 240)
+    TextboxTitle.TextSize = 14
+    TextboxTitle.TextXAlignment = Enum.TextXAlignment.Left
+    TextboxTitle.TextYAlignment = Enum.TextYAlignment.Center
+    TextboxTitle.Parent = TextboxElement
+
+    local InputBox = Instance.new("TextBox")
+    InputBox.Name = "Input"
+    InputBox.BackgroundColor3 = Color3.fromRGB(30, 30, 40) -- dark background
+    InputBox.Position = UDim2.new(1, -160, 0.5, -15) -- aligned right, 30px height
+    InputBox.Size = UDim2.new(0, 150, 0, 30)
+    InputBox.Font = Enum.Font.Gotham
+    InputBox.PlaceholderText = config.Placeholder or ""
+    InputBox.PlaceholderColor3 = Color3.fromRGB(150, 150, 160)
+    InputBox.Text = config.Default or ""
+    InputBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+    InputBox.TextSize = 14
+    InputBox.TextXAlignment = Enum.TextXAlignment.Left
+    InputBox.ClearTextOnFocus = false
+    InputBox.Parent = TextboxElement
+
+    local Corner = Instance.new("UICorner")
+    Corner.CornerRadius = UDim.new(0, 6)
+    Corner.Parent = InputBox
+
+    -- Focus effect
+    InputBox.Focused:Connect(function()
+        TweenService:Create(InputBox, TweenInfo.new(0.2), {
+            BackgroundColor3 = Color3.fromRGB(50, 50, 65)
+        }):Play()
+    end)
+
+    InputBox.FocusLost:Connect(function(enterPressed)
+        TweenService:Create(InputBox, TweenInfo.new(0.2), {
+            BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+        }):Play()
+
+        if enterPressed and config.Callback then
+            config.Callback(InputBox.Text)
+        end
+    end)
+end
+
         return Tab
     end
 
