@@ -88,6 +88,69 @@ function Unsophisicated:CreateWindow(title)
         return math.min(scaleX, scaleY, 1)
     end
 
+            -- Notification function
+function Unsophisicated:Notify(config)
+    config = config or {}
+    local title = config.Title or "Notification"
+    local content = config.Content or ""
+    local duration = config.Duration or 4
+    local icon = config.Icon or "info" -- not used for now
+
+    local notif = Instance.new("Frame")
+    notif.Name = "Notification"
+    notif.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+    notif.BackgroundTransparency = 0.15
+    notif.BorderSizePixel = 0
+    notif.Size = UDim2.new(1, 0, 0, 0)
+    notif.Parent = Notifications
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 8)
+    corner.Parent = notif
+
+    CreateShadow(notif, 8, 0.7)
+
+    local titleLabel = Instance.new("TextLabel")
+    titleLabel.Name = "Title"
+    titleLabel.BackgroundTransparency = 1
+    titleLabel.Size = UDim2.new(1, -20, 0, 20)
+    titleLabel.Position = UDim2.new(0, 10, 0, 8)
+    titleLabel.Font = Enum.Font.GothamBold
+    titleLabel.Text = title
+    titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    titleLabel.TextSize = 14
+    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    titleLabel.Parent = notif
+
+    local contentLabel = Instance.new("TextLabel")
+    contentLabel.Name = "Content"
+    contentLabel.BackgroundTransparency = 1
+    contentLabel.Size = UDim2.new(1, -20, 0, 0)
+    contentLabel.Position = UDim2.new(0, 10, 0, 28)
+    contentLabel.Font = Enum.Font.Gotham
+    contentLabel.Text = content
+    contentLabel.TextColor3 = Color3.fromRGB(180, 180, 200)
+    contentLabel.TextSize = 12
+    contentLabel.TextWrapped = true
+    contentLabel.TextXAlignment = Enum.TextXAlignment.Left
+    contentLabel.Parent = notif
+
+    local contentHeight = contentLabel.TextBounds.Y
+    contentLabel.Size = UDim2.new(1, -20, 0, contentHeight)
+    notif.Size = UDim2.new(1, 0, 0, contentHeight + 40)
+
+    -- Animate in
+    notif.Position = UDim2.new(0, 0, 0, -notif.AbsoluteSize.Y)
+    tween(notif, {Position = UDim2.new(0, 0, 0, 0)}, 0.4, Enum.EasingStyle.Back)
+
+    task.wait(duration)
+
+    -- Animate out
+    tween(notif, {Position = UDim2.new(0, 0, 0, -notif.AbsoluteSize.Y)}, 0.4, Enum.EasingStyle.Back, nil, function()
+        notif:Destroy()
+    end)
+end
+    
     -- Main window frame
     local MainFrame = Instance.new("Frame")
     MainFrame.Name = "MainFrame"
@@ -410,69 +473,6 @@ function Unsophisicated:CreateWindow(title)
             divider.LayoutOrder = nextOrder()
             divider.Parent = TabContent
         end
-
-        -- Notification function
-function Unsophisicated:Notify(config)
-    config = config or {}
-    local title = config.Title or "Notification"
-    local content = config.Content or ""
-    local duration = config.Duration or 4
-    local icon = config.Icon or "info" -- not used for now
-
-    local notif = Instance.new("Frame")
-    notif.Name = "Notification"
-    notif.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-    notif.BackgroundTransparency = 0.15
-    notif.BorderSizePixel = 0
-    notif.Size = UDim2.new(1, 0, 0, 0)
-    notif.Parent = Notifications
-
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 8)
-    corner.Parent = notif
-
-    CreateShadow(notif, 8, 0.7)
-
-    local titleLabel = Instance.new("TextLabel")
-    titleLabel.Name = "Title"
-    titleLabel.BackgroundTransparency = 1
-    titleLabel.Size = UDim2.new(1, -20, 0, 20)
-    titleLabel.Position = UDim2.new(0, 10, 0, 8)
-    titleLabel.Font = Enum.Font.GothamBold
-    titleLabel.Text = title
-    titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    titleLabel.TextSize = 14
-    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-    titleLabel.Parent = notif
-
-    local contentLabel = Instance.new("TextLabel")
-    contentLabel.Name = "Content"
-    contentLabel.BackgroundTransparency = 1
-    contentLabel.Size = UDim2.new(1, -20, 0, 0)
-    contentLabel.Position = UDim2.new(0, 10, 0, 28)
-    contentLabel.Font = Enum.Font.Gotham
-    contentLabel.Text = content
-    contentLabel.TextColor3 = Color3.fromRGB(180, 180, 200)
-    contentLabel.TextSize = 12
-    contentLabel.TextWrapped = true
-    contentLabel.TextXAlignment = Enum.TextXAlignment.Left
-    contentLabel.Parent = notif
-
-    local contentHeight = contentLabel.TextBounds.Y
-    contentLabel.Size = UDim2.new(1, -20, 0, contentHeight)
-    notif.Size = UDim2.new(1, 0, 0, contentHeight + 40)
-
-    -- Animate in
-    notif.Position = UDim2.new(0, 0, 0, -notif.AbsoluteSize.Y)
-    tween(notif, {Position = UDim2.new(0, 0, 0, 0)}, 0.4, Enum.EasingStyle.Back)
-
-    task.wait(duration)
-
-    -- Animate out
-    tween(notif, {Position = UDim2.new(0, 0, 0, -notif.AbsoluteSize.Y)}, 0.4, Enum.EasingStyle.Back, nil, function()
-        notif:Destroy()
-    end)
-end
         
         function Tab:AddButton(config)
             local height = config.Description and 50 or 40
