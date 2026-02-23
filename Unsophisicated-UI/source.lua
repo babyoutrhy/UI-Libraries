@@ -8,6 +8,7 @@ local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
 
+-- Utility functions
 local function tween(object, goal, duration, easingStyle, easingDirection, callback)
     duration = duration or 0.3
     easingStyle = easingStyle or Enum.EasingStyle.Exponential
@@ -36,24 +37,24 @@ local function CreateShadow(parent, sizeOffset, transparency)
     return shadow
 end
 
--- Cleanup old GUI
-if CoreGui:FindFirstChild("UnsophisicatedUI_") then
+-- Cleanup old GUI (fixed typo)
+if CoreGui:FindFirstChild("UnsophisicatedUI") then
     CoreGui:FindFirstChild("UnsophisicatedUI"):Destroy()
 end
 
 -- Main GUI holder
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "UnsophisicatedUI_Modern"
+ScreenGui.Name = "UnsophisicatedUI"
 ScreenGui.Parent = CoreGui
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 ScreenGui.ResetOnSpawn = false
 
--- Notifications container
+-- ========== NOTIFICATION SYSTEM (moved to top) ==========
 local Notifications = Instance.new("Frame")
 Notifications.Name = "Notifications"
 Notifications.BackgroundTransparency = 1
 Notifications.Size = UDim2.new(0, 320, 0, 0)
-Notifications.Position = UDim2.new(1, -10, 1, -10)
+Notifications.Position = UDim2.new(1, -10, 1, -10) -- bottom right
 Notifications.Parent = ScreenGui
 
 local NotificationLayout = Instance.new("UIListLayout")
@@ -72,29 +73,11 @@ end
 workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(updateNotificationLayout)
 updateNotificationLayout()
 
--- Main window creation
-function Unsophisicated:CreateWindow(title)
-    title = title or "Unsophisicated UI"
-
-    -- Mobile detection and scaling
-    local isMobile = UserInputService.TouchEnabled and not UserInputService.MouseEnabled
-    local baseWidth = 600
-    local baseHeight = 500
-
-    local function getMobileScale()
-        local viewportSize = workspace.CurrentCamera.ViewportSize
-        local scaleX = viewportSize.X / 800
-        local scaleY = viewportSize.Y / 600
-        return math.min(scaleX, scaleY, 1)
-    end
-
-            -- Notification function
 function Unsophisicated:Notify(config)
     config = config or {}
     local title = config.Title or "Notification"
     local content = config.Content or ""
     local duration = config.Duration or 4
-    local icon = config.Icon or "info" -- not used for now
 
     local notif = Instance.new("Frame")
     notif.Name = "Notification"
@@ -150,7 +133,24 @@ function Unsophisicated:Notify(config)
         notif:Destroy()
     end)
 end
-    
+-- ========================================================
+
+-- Main window creation
+function Unsophisicated:CreateWindow(title)
+    title = title or "Unsophisicated UI"
+
+    -- Mobile detection and scaling
+    local isMobile = UserInputService.TouchEnabled and not UserInputService.MouseEnabled
+    local baseWidth = 600
+    local baseHeight = 500
+
+    local function getMobileScale()
+        local viewportSize = workspace.CurrentCamera.ViewportSize
+        local scaleX = viewportSize.X / 800
+        local scaleY = viewportSize.Y / 600
+        return math.min(scaleX, scaleY, 1)
+    end
+
     -- Main window frame
     local MainFrame = Instance.new("Frame")
     MainFrame.Name = "MainFrame"
@@ -473,7 +473,7 @@ end
             divider.LayoutOrder = nextOrder()
             divider.Parent = TabContent
         end
-        
+
         function Tab:AddButton(config)
             local height = config.Description and 50 or 40
             local element = CreateElement("Button", height)
@@ -1180,7 +1180,7 @@ end
         nameLabel.Size = UDim2.new(1, -60, 0, 25)
         nameLabel.Position = UDim2.new(0, 60, 0, 5)
         nameLabel.Font = Enum.Font.GothamBold
-        nameLabel.Text = Players.LocalPlayer.DisplayName .. " @" .. Players.LocalPlayer.Name
+        nameLabel.Text = Players.LocalPlayer.DisplayName .. " @" .. Players.LocalPlayer.Name -- no more welcoming msg ://
         nameLabel.TextColor3 = Color3.fromRGB(220, 220, 240)
         nameLabel.TextSize = 16
         nameLabel.TextXAlignment = Enum.TextXAlignment.Left
