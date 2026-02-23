@@ -35,8 +35,8 @@ local function CreateShadow(parent, sizeOffset, transparency)
 end
 
 -- Cleanup old GUI
-if CoreGui:FindFirstChild("UnsophisicatedUI_Modern") then
-    CoreGui:FindFirstChild("UnsophisicatedUI_Modern"):Destroy()
+if CoreGui:FindFirstChild("UnsophisicatedUI_") then
+    CoreGui:FindFirstChild("UnsophisicatedUI"):Destroy()
 end
 
 -- Main GUI holder
@@ -51,75 +51,26 @@ local Notifications = Instance.new("Frame")
 Notifications.Name = "Notifications"
 Notifications.BackgroundTransparency = 1
 Notifications.Size = UDim2.new(0, 320, 0, 0)
-Notifications.Position = UDim2.new(1, -330, 0, 10)
+Notifications.Position = UDim2.new(1, -10, 1, -10) -- bottom right with margin
 Notifications.Parent = ScreenGui
 
 local NotificationLayout = Instance.new("UIListLayout")
 NotificationLayout.Parent = Notifications
 NotificationLayout.SortOrder = Enum.SortOrder.LayoutOrder
 NotificationLayout.Padding = UDim.new(0, 8)
-NotificationLayout.VerticalAlignment = Enum.VerticalAlignment.Top
+NotificationLayout.VerticalAlignment = Enum.VerticalAlignment.Bottom -- stack from bottom
 
--- Notification function
-function Unsophisicated:Notify(config)
-    config = config or {}
-    local title = config.Title or "Notification"
-    local content = config.Content or ""
-    local duration = config.Duration or 4
-    local icon = config.Icon or "info" -- not used for now
-
-    local notif = Instance.new("Frame")
-    notif.Name = "Notification"
-    notif.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-    notif.BackgroundTransparency = 0.15
-    notif.BorderSizePixel = 0
-    notif.Size = UDim2.new(1, 0, 0, 0)
-    notif.Parent = Notifications
-
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 8)
-    corner.Parent = notif
-
-    CreateShadow(notif, 8, 0.7)
-
-    local titleLabel = Instance.new("TextLabel")
-    titleLabel.Name = "Title"
-    titleLabel.BackgroundTransparency = 1
-    titleLabel.Size = UDim2.new(1, -20, 0, 20)
-    titleLabel.Position = UDim2.new(0, 10, 0, 8)
-    titleLabel.Font = Enum.Font.GothamBold
-    titleLabel.Text = title
-    titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    titleLabel.TextSize = 14
-    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-    titleLabel.Parent = notif
-
-    local contentLabel = Instance.new("TextLabel")
-    contentLabel.Name = "Content"
-    contentLabel.BackgroundTransparency = 1
-    contentLabel.Size = UDim2.new(1, -20, 0, 0)
-    contentLabel.Position = UDim2.new(0, 10, 0, 28)
-    contentLabel.Font = Enum.Font.Gotham
-    contentLabel.Text = content
-    contentLabel.TextColor3 = Color3.fromRGB(180, 180, 200)
-    contentLabel.TextSize = 12
-    contentLabel.TextWrapped = true
-    contentLabel.TextXAlignment = Enum.TextXAlignment.Left
-    contentLabel.Parent = notif
-
-    local contentHeight = contentLabel.TextBounds.Y
-    contentLabel.Size = UDim2.new(1, -20, 0, contentHeight)
-    notif.Size = UDim2.new(1, 0, 0, contentHeight + 40)
-
-    notif.Position = UDim2.new(0, 0, 0, -notif.AbsoluteSize.Y)
-    tween(notif, {Position = UDim2.new(0, 0, 0, 0)}, 0.4, Enum.EasingStyle.Back)
-
-    task.wait(duration)
-
-    tween(notif, {Position = UDim2.new(0, 0, 0, -notif.AbsoluteSize.Y)}, 0.4, Enum.EasingStyle.Back, function()
-        notif:Destroy()
-    end)
+-- Responsive sizing for mobile/tablets
+local function updateNotificationLayout()
+    local viewport = workspace.CurrentCamera.ViewportSize
+    local width = math.min(320, viewport.X * 0.9) -- max 320px, otherwise 90% of screen
+    Notifications.Size = UDim2.new(0, width, 0, 0)
+    Notifications.Position = UDim2.new(1, -width - 10, 1, -10) -- keep margin
 end
+
+-- Update when viewport changes (orientation/resize)
+workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(updateNotificationLayout)
+updateNotificationLayout() -- initial call
 
 -- Main window creation
 function Unsophisicated:CreateWindow(title)
