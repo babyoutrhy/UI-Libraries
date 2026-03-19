@@ -21,22 +21,6 @@ local function tween(object, goal, duration, easingStyle, easingDirection, callb
     return t
 end
 
-local function CreateShadow(parent, sizeOffset, transparency)
-    local shadow = Instance.new("Frame")
-    shadow.Name = "Shadow"
-    shadow.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    shadow.BackgroundTransparency = transparency or 0.7
-    shadow.Size = UDim2.new(1, sizeOffset, 1, sizeOffset)
-    shadow.Position = UDim2.new(0, -sizeOffset/2, 0, -sizeOffset/2)
-    shadow.ZIndex = -1
-    shadow.Parent = parent
-    local corner = Instance.new("UICorner")
-    local parentCorner = parent:FindFirstChildOfClass("UICorner")
-    corner.CornerRadius = parentCorner and parentCorner.CornerRadius or UDim.new(0, 8)
-    corner.Parent = shadow
-    return shadow
-end
-
 -- Cleanup old GUI (fixed typo)
 if CoreGui:FindFirstChild("UnsophisicatedUI") then
     CoreGui:FindFirstChild("UnsophisicatedUI"):Destroy()
@@ -90,8 +74,6 @@ function Unsophisicated:Notify(config)
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0, 8)
     corner.Parent = notif
-
-    CreateShadow(notif, 8, 0.7)
 
     local titleLabel = Instance.new("TextLabel")
     titleLabel.Name = "Title"
@@ -164,9 +146,7 @@ function Unsophisicated:CreateWindow(title)
     local MainCorner = Instance.new("UICorner")
     MainCorner.CornerRadius = UDim.new(0, 12)
     MainCorner.Parent = MainFrame
-
-    CreateShadow(MainFrame, 12, 0.8)
-
+    
     -- Apply initial mobile scaling if needed
     local function updateMobileScale()
         if isMobile then
