@@ -1140,7 +1140,7 @@ function Unsophisicated:CreateWindow(title)
     end
 
     function Window:CreateHomeTab()
-        local home = self:AddTab("Home")
+        local home = self:AddTab("Home", "6026568251")
         local content = home.Content
 
         -- Profile section
