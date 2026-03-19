@@ -265,16 +265,21 @@ function Unsophisicated:CreateWindow(title)
     TabPadding.Parent = TabBar
     TabPadding.PaddingLeft = UDim.new(0, 15)
 
+    -- Content area
+    local ContentArea = Instance.new("Frame")
+    ContentArea.Name = "ContentArea"
+    ContentArea.BackgroundColor3 = Color3.fromRGB(22, 22, 28)
+    ContentArea.BorderSizePixel = 0
+    ContentArea.Position = UDim2.new(0, 0, 0, 85)
+    ContentArea.Size = UDim2.new(1, 0, 1, -85)
+    ContentArea.Parent = MainFrame
+
     local PageHolder = Instance.new("Frame")
     PageHolder.Name = "PageHolder"
     PageHolder.BackgroundTransparency = 1
-    PageHolder.Position = UDim2.new(0, 10, 0, 55)
-    PageHolder.Size = UDim2.new(1, -20, 1, -65)
-    PageHolder.Parent = MainFrame
-
-    local TitleBarCorner = Instance.new("UICorner")
-    TitleBarCorner.CornerRadius = UDim.new(0, 12)
-    TitleBarCorner.Parent = TitleBar
+    PageHolder.Size = UDim2.new(1, -20, 1, -20)
+    PageHolder.Position = UDim2.new(0, 10, 0, 10)
+    PageHolder.Parent = ContentArea
 
     -- Dragging
     local dragging = false
