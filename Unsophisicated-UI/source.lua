@@ -835,11 +835,31 @@ function Unsophisicated:CreateWindow(title)
 
             -- Handle default selection
             if isMultiple then
-                if type(config.Default) == "table" then
-                    for _, opt in ipairs(config.Default) do selected[opt] = true end
+                if selected[opt] then
+                    -- Deselect: remove from table
+                    selected[opt] = nil
+                    check.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+                    check.CheckMark.Visible = false
+                else
+                    -- Select: add to table
+                    selected[opt] = true
+                    check.BackgroundColor3 = Color3.fromRGB(100, 80, 200)
+                    check.CheckMark.Visible = true
                 end
-                local count = 0 for _ in pairs(selected) do count = count + 1 end
-                if count > 0 then selectBtn.Text = count .. " selected" end
+
+                local count = 0
+                for _ in pairs(selected) do
+                    count = count + 1
+                end
+                selectBtn.Text = (count > 0) and (count .. " selected") or "Select"
+
+                if config.Callback then
+                    local list = {}
+                    for opt, _ in pairs(selected) do
+                        table.insert(list, opt)
+                    end
+                    config.Callback(list)
+                end
             else
                 if type(config.Default) == "string" then
                     selectBtn.Text = config.Default
