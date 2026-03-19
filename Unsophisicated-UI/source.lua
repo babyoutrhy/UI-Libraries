@@ -766,75 +766,165 @@ function Unsophisicated:CreateWindow(title)
         end
 
         function Tab:AddDropdown(config)
-            local element = CreateElement("Dropdown", 40)
-            element.ClipsDescendants = false
-            element.LayoutOrder = nextOrder()
-            element.Parent = TabContent
+    local element = CreateElement("Dropdown", 40)
+    element.ClipsDescendants = false
+    element.LayoutOrder = nextOrder()
+    element.Parent = TabContent
 
-            local title = Instance.new("TextLabel")
-            title.Name = "Title"
-            title.BackgroundTransparency = 1
-            title.Position = UDim2.new(0, 15, 0, 0)
-            title.Size = UDim2.new(0, 150, 1, 0)
-            title.Font = Enum.Font.GothamBold
-            title.Text = config.Text
-            title.TextColor3 = Color3.fromRGB(220, 220, 240)
-            title.TextSize = 14
-            title.TextYAlignment = Enum.TextYAlignment.Center
-            title.TextXAlignment = Enum.TextXAlignment.Left
-            title.TextTruncate = Enum.TextTruncate.AtEnd
-            title.Parent = element
+    local title = Instance.new("TextLabel")
+    title.Name = "Title"
+    title.BackgroundTransparency = 1
+    title.Position = UDim2.new(0, 15, 0, 0)
+    title.Size = UDim2.new(0, 150, 1, 0)
+    title.Font = Enum.Font.GothamBold
+    title.Text = config.Text
+    title.TextColor3 = Color3.fromRGB(220, 220, 240)
+    title.TextSize = 14
+    title.TextYAlignment = Enum.TextYAlignment.Center
+    title.TextXAlignment = Enum.TextXAlignment.Left
+    title.TextTruncate = Enum.TextTruncate.AtEnd
+    title.Parent = element
 
-            local selectBtn = Instance.new("TextButton")
-            selectBtn.Name = "SelectButton"
-            selectBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 38)
-            selectBtn.Position = UDim2.new(1, -160, 0.5, -15)
-            selectBtn.Size = UDim2.new(0, 150, 0, 30)
-            selectBtn.Font = Enum.Font.Gotham
-            selectBtn.Text = "Select"
-            selectBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-            selectBtn.TextSize = 14
-            selectBtn.TextTruncate = Enum.TextTruncate.AtEnd
-            selectBtn.Parent = element
+    local selectBtn = Instance.new("TextButton")
+    selectBtn.Name = "SelectButton"
+    selectBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 38)
+    selectBtn.Position = UDim2.new(1, -160, 0.5, -15)
+    selectBtn.Size = UDim2.new(0, 150, 0, 30)
+    selectBtn.Font = Enum.Font.Gotham
+    selectBtn.Text = "Select"
+    selectBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    selectBtn.TextSize = 14
+    selectBtn.TextTruncate = Enum.TextTruncate.AtEnd
+    selectBtn.Parent = element
 
-            local selectCorner = Instance.new("UICorner")
-            selectCorner.CornerRadius = UDim.new(0, 6)
-            selectCorner.Parent = selectBtn
+    local selectCorner = Instance.new("UICorner")
+    selectCorner.CornerRadius = UDim.new(0, 6)
+    selectCorner.Parent = selectBtn
 
-            local dropdownContainer = Instance.new("Frame")
-            dropdownContainer.Name = "DropdownContainer"
-            dropdownContainer.BackgroundTransparency = 1
-            dropdownContainer.Size = UDim2.new(0, 150, 0, 0)
+    local dropdownContainer = Instance.new("Frame")
+    dropdownContainer.Name = "DropdownContainer"
+    dropdownContainer.BackgroundTransparency = 1
+    dropdownContainer.Size = UDim2.new(0, 150, 0, 0)
+    dropdownContainer.Visible = false
+    dropdownContainer.ZIndex = 10
+    dropdownContainer.Parent = ScreenGui
+
+    local dropdownList = Instance.new("ScrollingFrame")
+    dropdownList.Name = "DropdownList"
+    dropdownList.BackgroundColor3 = Color3.fromRGB(30, 30, 38)
+    dropdownList.BorderSizePixel = 0
+    dropdownList.Size = UDim2.new(1, 0, 1, 0)
+    dropdownList.ScrollBarThickness = 4
+    dropdownList.CanvasSize = UDim2.new(0, 0, 0, 0)
+    dropdownList.ZIndex = 11
+    dropdownList.Parent = dropdownContainer
+
+    local listCorner = Instance.new("UICorner")
+    listCorner.CornerRadius = UDim.new(0, 6)
+    listCorner.Parent = dropdownList
+
+    local listLayout = Instance.new("UIListLayout")
+    listLayout.Parent = dropdownList
+    listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    listLayout.Padding = UDim.new(0, 2)
+
+    local isOpen = false
+    local isMultiple = config.MultipleOptions or false
+    local selected = {}
+    local posConnection
+
+    -- Handle default selection
+    if isMultiple then
+        if type(config.Default) == "table" then
+            for _, opt in ipairs(config.Default) do selected[opt] = true end
+        end
+        local count = 0 for _ in pairs(selected) do count = count + 1 end
+        if count > 0 then selectBtn.Text = count .. " selected" end
+    else
+        if type(config.Default) == "string" then
+            selectBtn.Text = config.Default
+        end
+    end
+
+    local function updateListSize()
+        local h = 0
+        for _, child in ipairs(dropdownList:GetChildren()) do
+            if child:IsA("TextButton") then
+                h = h + child.AbsoluteSize.Y + listLayout.Padding.Offset
+            end
+        end
+        dropdownList.CanvasSize = UDim2.new(0, 0, 0, h)
+        dropdownContainer.Size = UDim2.new(0, 150, 0, math.min(150, h))
+    end
+
+    local function updatePos()
+        local btnPos = selectBtn.AbsolutePosition
+        dropdownContainer.Position = UDim2.new(0, btnPos.X, 0, btnPos.Y + selectBtn.AbsoluteSize.Y + 2)
+    end
+
+    local function toggle()
+        if isOpen then
             dropdownContainer.Visible = false
-            dropdownContainer.ZIndex = 10
-            dropdownContainer.Parent = ScreenGui
+            isOpen = false
+            if posConnection then posConnection:Disconnect() end
+        else
+            updatePos()
+            dropdownContainer.Visible = true
+            isOpen = true
+            posConnection = RunService.Heartbeat:Connect(updatePos)
+        end
+    end
 
-            local dropdownList = Instance.new("ScrollingFrame")
-            dropdownList.Name = "DropdownList"
-            dropdownList.BackgroundColor3 = Color3.fromRGB(30, 30, 38)
-            dropdownList.BorderSizePixel = 0
-            dropdownList.Size = UDim2.new(1, 0, 1, 0)
-            dropdownList.ScrollBarThickness = 4
-            dropdownList.CanvasSize = UDim2.new(0, 0, 0, 0)
-            dropdownList.ZIndex = 11
-            dropdownList.Parent = dropdownContainer
+    for _, opt in ipairs(config.Options) do
+        local optBtn = Instance.new("TextButton")
+        optBtn.Name = opt
+        optBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 48)
+        optBtn.Size = UDim2.new(1, -4, 0, 28)
+        optBtn.Position = UDim2.new(0, 2, 0, 0)
+        optBtn.Font = Enum.Font.Gotham
+        optBtn.Text = opt
+        optBtn.TextColor3 = Color3.fromRGB(220, 220, 240)
+        optBtn.TextSize = 14
+        optBtn.ZIndex = 12
+        optBtn.Parent = dropdownList
 
-            local listCorner = Instance.new("UICorner")
-            listCorner.CornerRadius = UDim.new(0, 6)
-            listCorner.Parent = dropdownList
+        local optCorner = Instance.new("UICorner")
+        optCorner.CornerRadius = UDim.new(0, 4)
+        optCorner.Parent = optBtn
 
-            local listLayout = Instance.new("UIListLayout")
-            listLayout.Parent = dropdownList
-            listLayout.SortOrder = Enum.SortOrder.LayoutOrder
-            listLayout.Padding = UDim.new(0, 2)
+        if isMultiple then
+            local check = Instance.new("Frame")
+            check.Name = "Check"
+            check.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+            check.Size = UDim2.new(0, 16, 0, 16)
+            check.Position = UDim2.new(0, 6, 0.5, -8)
+            check.ZIndex = 13
+            check.Parent = optBtn
 
-            local isOpen = false
-            local isMultiple = config.MultipleOptions or false
-            local selected = {}
-            local posConnection
+            local checkCorner = Instance.new("UICorner")
+            checkCorner.CornerRadius = UDim.new(0, 3)
+            checkCorner.Parent = check
 
-            -- Handle default selection
-            if isMultiple then
+            local checkMark = Instance.new("TextLabel")
+            checkMark.Name = "CheckMark"
+            checkMark.BackgroundTransparency = 1
+            checkMark.Size = UDim2.new(1, 0, 1, 0)
+            checkMark.Font = Enum.Font.GothamBold
+            checkMark.Text = "✓"
+            checkMark.TextColor3 = Color3.fromRGB(255, 255, 255)
+            checkMark.TextSize = 12
+            checkMark.Visible = selected[opt] or false
+            checkMark.ZIndex = 14
+            checkMark.Parent = check
+
+            if selected[opt] then
+                check.BackgroundColor3 = Color3.fromRGB(100, 80, 200)
+            end
+
+            optBtn.TextXAlignment = Enum.TextXAlignment.Center
+            optBtn.Text = "   " .. opt
+
+            optBtn.MouseButton1Click:Connect(function()
                 if selected[opt] then
                     -- Deselect: remove from table
                     selected[opt] = nil
@@ -847,12 +937,14 @@ function Unsophisicated:CreateWindow(title)
                     check.CheckMark.Visible = true
                 end
 
+                -- Update button text with count
                 local count = 0
                 for _ in pairs(selected) do
                     count = count + 1
                 end
-                selectBtn.Text = (count > 0) and (count .. " selected") or "Select"
+                selectBtn.Text = count > 0 and (count .. " selected") or "Select"
 
+                -- Call callback with list of selected options
                 if config.Callback then
                     local list = {}
                     for opt, _ in pairs(selected) do
@@ -860,125 +952,25 @@ function Unsophisicated:CreateWindow(title)
                     end
                     config.Callback(list)
                 end
-            else
-                if type(config.Default) == "string" then
-                    selectBtn.Text = config.Default
-                end
-            end
-
-            local function updateListSize()
-                local h = 0
-                for _, child in ipairs(dropdownList:GetChildren()) do
-                    if child:IsA("TextButton") then
-                        h = h + child.AbsoluteSize.Y + listLayout.Padding.Offset
-                    end
-                end
-                dropdownList.CanvasSize = UDim2.new(0, 0, 0, h)
-                dropdownContainer.Size = UDim2.new(0, 150, 0, math.min(150, h))
-            end
-
-            local function updatePos()
-                local btnPos = selectBtn.AbsolutePosition
-                dropdownContainer.Position = UDim2.new(0, btnPos.X, 0, btnPos.Y + selectBtn.AbsoluteSize.Y + 2)
-            end
-
-            local function toggle()
-                if isOpen then
-                    dropdownContainer.Visible = false
-                    isOpen = false
-                    if posConnection then posConnection:Disconnect() end
-                else
-                    updatePos()
-                    dropdownContainer.Visible = true
-                    isOpen = true
-                    posConnection = RunService.Heartbeat:Connect(updatePos)
-                end
-            end
-
-            for _, opt in ipairs(config.Options) do
-                local optBtn = Instance.new("TextButton")
-                optBtn.Name = opt
-                optBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 48)
-                optBtn.Size = UDim2.new(1, -4, 0, 28)
-                optBtn.Position = UDim2.new(0, 2, 0, 0)
-                optBtn.Font = Enum.Font.Gotham
-                optBtn.Text = opt
-                optBtn.TextColor3 = Color3.fromRGB(220, 220, 240)
-                optBtn.TextSize = 14
-                optBtn.ZIndex = 12
-                optBtn.Parent = dropdownList
-
-                local optCorner = Instance.new("UICorner")
-                optCorner.CornerRadius = UDim.new(0, 4)
-                optCorner.Parent = optBtn
-
-                if isMultiple then
-                    local check = Instance.new("Frame")
-                    check.Name = "Check"
-                    check.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
-                    check.Size = UDim2.new(0, 16, 0, 16)
-                    check.Position = UDim2.new(0, 6, 0.5, -8)
-                    check.ZIndex = 13
-                    check.Parent = optBtn
-
-                    local checkCorner = Instance.new("UICorner")
-                    checkCorner.CornerRadius = UDim.new(0, 3)
-                    checkCorner.Parent = check
-
-                    local checkMark = Instance.new("TextLabel")
-                    checkMark.Name = "CheckMark"
-                    checkMark.BackgroundTransparency = 1
-                    checkMark.Size = UDim2.new(1, 0, 1, 0)
-                    checkMark.Font = Enum.Font.GothamBold
-                    checkMark.Text = "✓"
-                    checkMark.TextColor3 = Color3.fromRGB(255, 255, 255)
-                    checkMark.TextSize = 12
-                    checkMark.Visible = selected[opt] or false
-                    checkMark.ZIndex = 14
-                    checkMark.Parent = check
-
-                    if selected[opt] then
-                        check.BackgroundColor3 = Color3.fromRGB(100, 80, 200)
-                    end
-
-                    optBtn.TextXAlignment = Enum.TextXAlignment.Center
-                    optBtn.Text = "   " .. opt
-
-                    optBtn.MouseButton1Click:Connect(function()
-                        selected[opt] = not selected[opt]
-                        if selected[opt] then
-                            check.BackgroundColor3 = Color3.fromRGB(100, 80, 200)
-                            check.CheckMark.Visible = true
-                        else
-                            check.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
-                            check.CheckMark.Visible = false
-                        end
-                        local count = 0 for _ in pairs(selected) do count = count + 1 end
-                        selectBtn.Text = count > 0 and (count .. " selected") or "Select"
-                        if config.Callback then
-                            local list = {}
-                            for opt, sel in pairs(selected) do if sel then table.insert(list, opt) end end
-                            config.Callback(list)
-                        end
-                    end)
-                else
-                    optBtn.MouseButton1Click:Connect(function()
-                        selectBtn.Text = opt
-                        toggle()
-                        if config.Callback then config.Callback(opt) end
-                    end)
-                end
-            end
-
-            listLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateListSize)
-            updateListSize()
-            selectBtn.MouseButton1Click:Connect(toggle)
-
-            element.Destroying:Connect(function()
-                if posConnection then posConnection:Disconnect() end
-                dropdownContainer:Destroy()
+            end)
+        else
+            optBtn.MouseButton1Click:Connect(function()
+                selectBtn.Text = opt
+                toggle()
+                if config.Callback then config.Callback(opt) end
             end)
         end
+    end
+
+    listLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateListSize)
+    updateListSize()
+    selectBtn.MouseButton1Click:Connect(toggle)
+
+    element.Destroying:Connect(function()
+        if posConnection then posConnection:Disconnect() end
+        dropdownContainer:Destroy()
+    end)
+end
 
         function Tab:AddParagraph(config)
             local element = CreateElement("Paragraph", 60)
