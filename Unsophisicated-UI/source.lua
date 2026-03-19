@@ -1111,9 +1111,9 @@ function Unsophisicated:CreateWindow(title)
         return Tab
     end
 
-    function Window:CreateHomeTab()
-        local home = self:AddTab("Home", "6031097225")
-        local content = home.Content
+    function Window:CreateInfoTab()
+        local Info = self:AddTab("Info", "6026568275")
+        local content = Info.Content
 
         -- Profile section
         local profileFrame = Instance.new("Frame")
@@ -1176,12 +1176,12 @@ function Unsophisicated:CreateWindow(title)
         joinLabel.TextXAlignment = Enum.TextXAlignment.Left
         joinLabel.Parent = profileFrame
 
-        home:AddDivider()
-        home:AddSection("Server Info")
+        Info:AddDivider()
+        Info:AddSection("Server Info")
 
-        local playerCount = home:AddLabel({ Text = "Players: " .. #Players:GetPlayers() .. "/" .. Players.MaxPlayers })
-        local ping = home:AddLabel({ Text = "Ping: 0ms" })
-        local uptime = home:AddLabel({ Text = "Uptime: 00:00:00" })
+        local playerCount = Info:AddLabel({ Text = "Players: " .. #Players:GetPlayers() .. "/" .. Players.MaxPlayers })
+        local ping = Info:AddLabel({ Text = "Ping: 0ms" })
+        local uptime = Info:AddLabel({ Text = "Uptime: 00:00:00" })
 
         spawn(function()
             while true do
@@ -1193,7 +1193,7 @@ function Unsophisicated:CreateWindow(title)
             end
         end)
 
-        return home
+        return Info
     end
 
     return Window
