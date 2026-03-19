@@ -1112,7 +1112,7 @@ function Unsophisicated:CreateWindow(title)
     end
 
     function Window:CreateInfoTab()
-        local Info = self:AddTab("Info", "6026568275")
+        local Info = self:AddTab("Info")
         local content = Info.Content
 
         -- Profile section
