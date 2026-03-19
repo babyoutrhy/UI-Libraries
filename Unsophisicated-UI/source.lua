@@ -166,7 +166,7 @@ function Unsophisicated:CreateWindow(title)
     -- Title bar
     local TitleBar = Instance.new("Frame")
     TitleBar.Name = "TitleBar"
-    TitleBar.BackgroundColor3 = Color3.fromRGB(28, 28, 34)
+    TitleBar.BackgroundColor3 = Color3.fromRGB(22, 22, 28)
     TitleBar.BorderSizePixel = 0
     TitleBar.Size = UDim2.new(1, 0, 0, 45)
     TitleBar.Parent = MainFrame
@@ -227,7 +227,7 @@ function Unsophisicated:CreateWindow(title)
     -- Tab bar
     local TabBar = Instance.new("Frame")
     TabBar.Name = "TabBar"
-    TabBar.BackgroundColor3 = Color3.fromRGB(28, 28, 34)
+    TabBar.BackgroundColor3 = Color3.fromRGB(22, 22, 28)
     TabBar.BorderSizePixel = 0
     TabBar.Size = UDim2.new(1, 0, 0, 40)
     TabBar.Position = UDim2.new(0, 0, 0, 45)
