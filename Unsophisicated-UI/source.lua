@@ -194,6 +194,14 @@ function Unsophisicated:CreateWindow(title)
     local TitleBarCorner = Instance.new("UICorner")
     TitleBarCorner.CornerRadius = UDim.new(0, 12)
     TitleBarCorner.Parent = TitleBar
+    -- Mask bottom corners
+    local bottomMask = Instance.new("Frame")
+    bottomMask.BackgroundColor3 = Color3.fromRGB(28, 28, 34)
+    bottomMask.BorderSizePixel = 0
+    bottomMask.Size = UDim2.new(1, 0, 0, 10)
+    bottomMask.Position = UDim2.new(0, 0, 1, -10)
+    bottomMask.Parent = TitleBar
+    bottomMask.ZIndex = 2
 
     local TitleLabel = Instance.new("TextLabel")
     TitleLabel.Name = "Title"
@@ -273,6 +281,10 @@ function Unsophisicated:CreateWindow(title)
     ContentArea.Position = UDim2.new(0, 0, 0, 85)
     ContentArea.Size = UDim2.new(1, 0, 1, -85)
     ContentArea.Parent = MainFrame
+
+    local ContentCorner = Instance.new("UICorner")
+    ContentCorner.CornerRadius = UDim.new(0, 12)
+    ContentCorner.Parent = ContentArea
 
     local PageHolder = Instance.new("Frame")
     PageHolder.Name = "PageHolder"
