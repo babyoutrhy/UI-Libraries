@@ -1,4 +1,4 @@
-local Unsophisicated = {}
+local Unsophisticated = {}
 
 -- Services
 local UserInputService = game:GetService("UserInputService")
@@ -22,13 +22,13 @@ local function tween(object, goal, duration, easingStyle, easingDirection, callb
 end
 
 -- Cleanup old GUI (fixed typo)
-if CoreGui:FindFirstChild("UnsophisicatedUI") then
-    CoreGui:FindFirstChild("UnsophisicatedUI"):Destroy()
+if CoreGui:FindFirstChild("UnsophisticatedUI") then
+    CoreGui:FindFirstChild("UnsophisticatedUI"):Destroy()
 end
 
 -- Main GUI holder
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "UnsophisicatedUI"
+ScreenGui.Name = "UnsophisticatedUI"
 ScreenGui.Parent = CoreGui
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 ScreenGui.ResetOnSpawn = false
@@ -57,7 +57,7 @@ end
 workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(updateNotificationLayout)
 updateNotificationLayout()
 
-function Unsophisicated:Notify(config)
+function Unsophisticated:Notify(config)
     config = config or {}
     local title = config.Title or "Notification"
     local content = config.Content or ""
@@ -118,8 +118,8 @@ end
 -- ========================================================
 
 -- Main window creation
-function Unsophisicated:CreateWindow(title)
-    title = title or "Unsophisicated UI"
+function Unsophisticated:CreateWindow(title)
+    title = title or "Unsophisticated UI"
 
     -- Mobile detection and scaling
     local isMobile = UserInputService.TouchEnabled and not UserInputService.MouseEnabled
@@ -1230,4 +1230,4 @@ end
     return Window
 end
 
-return Unsophisicated
+return Unsophisticated
