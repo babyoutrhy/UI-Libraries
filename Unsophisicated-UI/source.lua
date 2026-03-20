@@ -271,16 +271,14 @@ local dragInput = nil
 local dragStart, startPos
 
 TitleBar.InputBegan:Connect(function(input)
-    if dragging then return end -- already dragging, ignore new touches
+    if dragInput then return end -- already dragging, ignore new touches
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        dragging = true
         dragInput = input
         dragStart = input.Position
         startPos = MainFrame.Position
 
         input.Changed:Connect(function()
             if input.UserInputState == Enum.UserInputState.End then
-                dragging = false
                 dragInput = nil
             end
         end)
@@ -288,7 +286,7 @@ TitleBar.InputBegan:Connect(function(input)
 end)
 
 UserInputService.InputChanged:Connect(function(input)
-    if dragging and input == dragInput then
+    if dragInput and input == dragInput then
         local delta = input.Position - dragStart
         MainFrame.Position = UDim2.new(
             startPos.X.Scale,
