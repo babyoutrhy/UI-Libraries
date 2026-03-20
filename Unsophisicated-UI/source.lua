@@ -267,26 +267,42 @@ function Unsophisicated:CreateWindow(title)
 
     -- Dragging (fixed for multi‑touch)
 local dragging = false
-local dragInput = nil
 local dragStart, startPos
+local touchUserId = nil -- only used for touch
 
 TitleBar.InputBegan:Connect(function(input)
-    if dragInput then return end -- already dragging, ignore new touches
+    if dragging then return end
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        dragInput = input
+        dragging = true
         dragStart = input.Position
         startPos = MainFrame.Position
+        if input.UserInputType == Enum.UserInputType.Touch then
+            touchUserId = input.UserId
+        end
 
         input.Changed:Connect(function()
             if input.UserInputState == Enum.UserInputState.End then
-                dragInput = nil
+                dragging = false
+                touchUserId = nil
             end
         end)
     end
 end)
 
 UserInputService.InputChanged:Connect(function(input)
-    if dragInput and input == dragInput then
+    if not dragging then return end
+
+    if input.UserInputType == Enum.UserInputType.MouseMovement then
+        -- PC mouse movement – always accept
+        local delta = input.Position - dragStart
+        MainFrame.Position = UDim2.new(
+            startPos.X.Scale,
+            startPos.X.Offset + delta.X,
+            startPos.Y.Scale,
+            startPos.Y.Offset + delta.Y
+        )
+    elseif input.UserInputType == Enum.UserInputType.Touch and input.UserId == touchUserId then
+        -- Mobile – only the finger that started the drag
         local delta = input.Position - dragStart
         MainFrame.Position = UDim2.new(
             startPos.X.Scale,
