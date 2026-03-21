@@ -150,11 +150,12 @@ function Unsophisticated:CreateWindow(title)
     -- Apply initial mobile scaling if needed
     local function updateMobileScale()
         if isMobile then
-            local scale = getMobileScale()
-            local newWidth = baseWidth * scale
-            local newHeight = baseHeight * scale
-            MainFrame.Size = UDim2.new(0, newWidth, 0, newHeight)
-            MainFrame.Position = UDim2.new(0.5, -newWidth/2, 0.5, -newHeight/2)
+            local viewport = workspace.CurrentCamera.ViewportSize
+            local targetWidth = math.min(baseWidth, viewport.X - 40)
+            local scale = targetWidth / baseWidth
+            local targetHeight = baseHeight * scale
+            MainFrame.Size = UDim2.new(0, targetWidth, 0, targetHeight)
+            MainFrame.Position = UDim2.new(0.5, -targetWidth/2, 0.5, -targetHeight/2)
         end
     end
 
