@@ -134,11 +134,13 @@ function Unsophisticated:CreateWindow(title)
     end
 
     -- Main window frame
+    local baseWidth = 700   -- wider for long text
+    local baseHeight = 500
     local MainFrame = Instance.new("Frame")
     MainFrame.Name = "MainFrame"
     MainFrame.BackgroundColor3 = Color3.fromRGB(22, 22, 28)
     MainFrame.BorderSizePixel = 0
-    MainFrame.Position = UDim2.new(0.5, -300, 0.5, -250)
+    MainFrame.Position = UDim2.new(0.5, -baseWidth/2, 0.5, -baseHeight/2) -- temporary, will adjust
     MainFrame.Size = UDim2.new(0, baseWidth, 0, baseHeight)
     MainFrame.ClipsDescendants = true
     MainFrame.Parent = ScreenGui
@@ -146,34 +148,31 @@ function Unsophisticated:CreateWindow(title)
     local MainCorner = Instance.new("UICorner")
     MainCorner.CornerRadius = UDim.new(0, 12)
     MainCorner.Parent = MainFrame
-    
-    -- Apply initial mobile scaling if needed
-    local function updateMobileScale()
-        if isMobile then
-            local viewport = workspace.CurrentCamera.ViewportSize
-            -- Minimum width we want to maintain (desktop-like)
-            local minWidth = 550
-            -- Maximum width allowed (screen width minus margins)
-            local maxWidth = viewport.X - 40
-            -- Target width: as wide as possible but at least minWidth, up to maxWidth
-            local targetWidth = math.min(maxWidth, math.max(minWidth, baseWidth))
-            -- Scale height proportionally
-            local targetHeight = baseHeight * (targetWidth / baseWidth)
-            -- If height exceeds screen, scale down both dimensions to fit
-            if targetHeight > viewport.Y - 80 then
-                local scale = (viewport.Y - 80) / targetHeight
-                targetWidth = targetWidth * scale
-                targetHeight = viewport.Y - 80
-            end
-            MainFrame.Size = UDim2.new(0, targetWidth, 0, targetHeight)
-            MainFrame.Position = UDim2.new(0.5, -targetWidth/2, 0.5, -targetHeight/2)
+
+    -- Responsive window sizing (works on both PC and mobile)
+    local function updateWindowSize()
+        local viewport = workspace.CurrentCamera.ViewportSize
+        -- Desired width: as wide as possible but not exceeding baseWidth
+        local maxWidth = viewport.X - 40   -- leave a little margin
+        local targetWidth = math.min(baseWidth, maxWidth)
+        -- Scale height proportionally
+        local targetHeight = baseHeight * (targetWidth / baseWidth)
+        -- If height would exceed screen, scale down width further
+        if targetHeight > viewport.Y - 80 then
+            local scale = (viewport.Y - 80) / targetHeight
+            targetWidth = targetWidth * scale
+            targetHeight = viewport.Y - 80
         end
+        -- Apply size and position
+        MainFrame.Size = UDim2.new(0, targetWidth, 0, targetHeight)
+        MainFrame.Position = UDim2.new(0.5, -targetWidth/2, 0.5, -targetHeight/2)
     end
 
-    if isMobile then
-        workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(updateMobileScale)
-        updateMobileScale()
-    end
+    -- Set initial size
+    updateWindowSize()
+
+    -- Listen for orientation/resize changes (e.g., when rotating a mobile device)
+    workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(updateWindowSize)
 
     -- Title bar
     local TitleBar = Instance.new("Frame")
