@@ -151,9 +151,15 @@ function Unsophisticated:CreateWindow(title)
     local function updateMobileScale()
         if isMobile then
             local viewport = workspace.CurrentCamera.ViewportSize
+            -- Desired width: up to base width (600), but leave a small margin
             local targetWidth = math.min(baseWidth, viewport.X - 40)
-            local scale = targetWidth / baseWidth
-            local targetHeight = baseHeight * scale
+            -- Scale height proportionally
+            local targetHeight = baseHeight * (targetWidth / baseWidth)
+            -- If the window would be taller than the screen, scale down both dimensions
+            if targetHeight > viewport.Y - 80 then
+                targetHeight = viewport.Y - 80
+                targetWidth = baseWidth * (targetHeight / baseHeight)
+            end
             MainFrame.Size = UDim2.new(0, targetWidth, 0, targetHeight)
             MainFrame.Position = UDim2.new(0.5, -targetWidth/2, 0.5, -targetHeight/2)
         end
